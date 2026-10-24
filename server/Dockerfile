@@ -1,7 +1,7 @@
 # Jikimi AI server image: FastAPI API + workers + the static dashboard (multi-stage, slim).
 # Build from the repository root: docker build -f server/Dockerfile -t jikimi/server .
 
-FROM node:24-slim AS web
+FROM node:26-slim AS web
 WORKDIR /web
 COPY apps/dashboard/package.json apps/dashboard/package-lock.json ./
 RUN npm ci --no-audit --no-fund
