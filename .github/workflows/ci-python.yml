@@ -6,7 +6,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
       - name: System packages (WeasyPrint, ffmpeg, Urdu fonts)
         run: sudo apt-get update && sudo apt-get install -y ffmpeg libpango-1.0-0 libpangoft2-1.0-0 fonts-noto-core fonts-noto-extra
@@ -27,7 +27,7 @@ jobs:
         ports: ["5432:5432"]
         options: --health-cmd "pg_isready -U jikimi" --health-interval 5s --health-retries 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v6
       - run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 fonts-noto-core fonts-noto-extra
       - run: uv sync --all-packages --frozen --extra postgres
