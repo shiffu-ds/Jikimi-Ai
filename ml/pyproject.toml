@@ -1,0 +1,24 @@
+[project]
+name = "jikimi-ml"
+version = "0.1.0"
+description = "Jikimi AI ML: ST-GCN snatch model, trajectory transformer, evaluation statistics"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["jikimi-contracts", "jikimi-edge", "numpy>=2.0", "scipy>=1.14"]
+
+[project.optional-dependencies]
+torch = ["torch>=2.5", "onnx>=1.17"]
+
+[tool.uv.sources]
+jikimi-contracts = { workspace = true }
+jikimi-edge = { workspace = true }
+torch = { index = "pytorch-cpu" }
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.13"]
+build-backend = "uv_build"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

@@ -1,0 +1,47 @@
+# --- secrets & local data (never in git) ---------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+data/
+models/*
+!models/README.md
+
+# --- datasets: raw media lives on DVC / external HDD -------------------------
+datasets/**/raw/
+*.mp4
+*.mkv
+*.avi
+!eval/golden/clips/*.mp4
+
+# --- python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# --- web -----------------------------------------------------------------------
+node_modules/
+apps/dashboard/.next/
+apps/dashboard/out/
+apps/dashboard/next-env.d.ts
+*.tsbuildinfo
+
+# --- reports & misc ------------------------------------------------------------
+eval/reports/
+.DS_Store
+.idea/
+.vscode/
+
+# personal Claude Code settings (launch.json is shared on purpose)
+.claude/settings.local.json

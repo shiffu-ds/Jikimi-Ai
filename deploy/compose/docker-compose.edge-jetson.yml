@@ -1,0 +1,21 @@
+# Edge-GPU profile (E2: Jetson Orin Nano class). Skeleton - build TensorRT engines on the device.
+name: jikimi-edge-jetson
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.2
+    restart: unless-stopped
+    network_mode: host
+  edge:
+    build: { context: ../.., dockerfile: edge/Dockerfile.jetson }
+    restart: unless-stopped
+    runtime: nvidia
+    network_mode: host
+    env_file: ../../.env.edge
+    volumes:
+      - /data/jikimi:/data
+      - ../../edge/config:/app/edge/config:ro
+      - ../../models:/app/models:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    depends_on: [mediamtx]

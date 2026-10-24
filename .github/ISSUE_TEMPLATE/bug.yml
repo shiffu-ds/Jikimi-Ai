@@ -1,0 +1,14 @@
+name: Bug
+description: Something does not work
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened? Kya hua?, description: Steps, expected vs actual }
+    validations: { required: true }
+  - type: dropdown
+    id: area
+    attributes: { label: Area, options: [edge, server, dashboard, guard app, evidence, search, ml, docs] }
+  - type: input
+    id: version
+    attributes: { label: Version / commit }

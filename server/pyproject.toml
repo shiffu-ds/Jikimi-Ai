@@ -1,0 +1,47 @@
+[project]
+name = "jikimi-server"
+version = "0.1.0"
+description = "Jikimi AI server: FastAPI API, Roman Urdu search, evidence packs, escalation, workers"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = [
+    "jikimi-contracts",
+    "jikimi-common",
+    "jikimi-crypto",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14",
+    "pyjwt>=2.10",
+    "python-multipart>=0.0.18",
+    "jinja2>=3.1",
+    "weasyprint>=63",
+    "qrcode>=8.0",
+    "httpx>=0.27",
+    "numpy>=2.0",
+    "prometheus-client>=0.21",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2", "pgvector>=0.3"]
+redis = ["redis>=5.2"]
+voice = ["faster-whisper>=1.1", "av>=14"]  # guard voice replies (F12); model: models/README.md
+vlm = ["transformers>=5.18,<5.20", "torch>=2.5", "pillow>=10"]  # VERIFY-band verifier (F5) + distillation teacher (F6)
+
+[project.scripts]
+jikimi-server = "jikimi_server.__main__:main"
+
+[tool.uv.sources]
+jikimi-contracts = { workspace = true }
+jikimi-common = { workspace = true }
+jikimi-crypto = { workspace = true }
+torch = { index = "pytorch-cpu" }  # same CPU build as ml/ (no CUDA download)
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.13"]
+build-backend = "uv_build"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

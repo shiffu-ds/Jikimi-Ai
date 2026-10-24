@@ -1,0 +1,16 @@
+# PakRoads detection classes (plan Section 9.2) - order is fixed forever (YOLO class ids).
+names:
+  0: motorcycle
+  1: rider
+  2: pillion
+  3: helmet
+  4: no_helmet
+  5: rickshaw
+  6: qingqi
+  7: loader_rickshaw
+  8: donkey_cart
+  9: car
+  10: van
+  11: bus
+  12: truck
+  13: pedestrian

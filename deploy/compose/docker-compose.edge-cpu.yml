@@ -1,0 +1,26 @@
+# Edge-CPU profile (E1: Intel mini PC / old laptop at the site). Outbound-only: no ports open.
+name: jikimi-edge
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.2
+    restart: unless-stopped
+    network_mode: host
+    volumes: ["../mediamtx/mediamtx.yml:/mediamtx.yml:ro"]
+
+  edge:
+    image: jikimi/edge-cpu:0.1.0
+    build: { context: ../.., dockerfile: edge/Dockerfile.cpu }
+    restart: unless-stopped
+    network_mode: host
+    env_file: ../../.env          # RTSP URLs, device token, SMS numbers (never in git)
+    environment:
+      JIKIMI_EDGE_DATA_DIR: /data
+    volumes:
+      - /var/lib/jikimi:/data                 # SSD: outbox, clips, keys (LUKS-encrypted disk)
+      - ../../edge/config:/app/edge/config:ro
+      - ../../models:/app/models:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0             # GSM modem for offline SMS
+    tmpfs:
+      - /tmp:size=256m

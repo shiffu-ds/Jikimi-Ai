@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Jikimi · کیمرہ سیٹ اپ</title>
+<style>
+  :root {
+    --bg: #0b1120; --card: #131c2e; --line: #24324a; --text: #e8edf5; --muted: #93a1b8;
+    --brand: #10b981; --brand-ink: #04261b; --warn: #f59e0b; --bad: #ef4444; --accent: #38bdf8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.7 "Noto Naskh Arabic", "Noto Sans Arabic", system-ui, sans-serif; }
+  [dir="ltr"] body, body[dir="ltr"] { font-family: system-ui, "Segoe UI", sans-serif; line-height: 1.5; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .logo b { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--brand); color: var(--brand-ink); font-family: system-ui; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; }
+  h1 { font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", inherit; font-weight: 400; font-size: 1.5rem; margin: 4px 0 2px; }
+  [dir="ltr"] h1 { font-family: inherit; font-weight: 700; }
+  p.sub { color: var(--muted); margin: 0 0 14px; font-size: .95rem; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; list-style: none; padding: 0; margin: 0 0 16px; }
+  .steps li { padding: 8px 6px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: .8rem; text-align: center; }
+  .steps li.on { border-color: var(--brand); color: var(--text); }
+  .steps li.done { color: var(--brand); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 10px 0 4px; }
+  input, select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: #0e1626; color: var(--text); font: inherit; }
+  input[dir="ltr"] { text-align: left; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button { font: inherit; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; background: #1d2a42; color: var(--text); }
+  button.primary { background: var(--brand); color: var(--brand-ink); font-weight: 700; }
+  button.wide { width: 100%; margin-top: 12px; }
+  button:disabled { opacity: .5; cursor: progress; }
+  .actions { display: flex; gap: 10px; margin-top: 14px; }
+  .actions > * { flex: 1; }
+  .devices { display: grid; gap: 8px; margin-top: 10px; }
+  .device { text-align: start; border: 1px solid var(--line); background: #0e1626; }
+  .device.on { border-color: var(--brand); }
+  .device small { display: block; color: var(--muted); direction: ltr; text-align: start; }
+  .status { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+  .ok { color: var(--brand); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+  .facts div { background: #0e1626; border-radius: 10px; padding: 8px; text-align: center; }
+  .facts b { display: block; direction: ltr; }
+  .facts span { color: var(--muted); font-size: .8rem; }
+  ul.advice { margin: 6px 0 0; padding-inline-start: 18px; color: var(--muted); font-size: .9rem; }
+  .pic { position: relative; margin-top: 12px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #000; touch-action: none; }
+  .pic img { display: block; width: 100%; height: auto; }
+  .pic canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hint { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+  .msg { margin-top: 10px; padding: 10px 12px; border-radius: 10px; font-size: .92rem; }
+  .msg.err { background: rgba(239, 68, 68, .12); color: #fecaca; }
+  .msg.good { background: rgba(16, 185, 129, .12); color: #a7f3d0; }
+  .mono { font-family: ui-monospace, monospace; direction: ltr; unicode-bidi: embed; }
+  .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: s 1s linear infinite; vertical-align: -3px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  [hidden] { display: none !important; }
+  @media (max-width: 420px) { .row { grid-template-columns: 1fr; } .facts { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><b>J</b><span data-t="app"></span></div>
+  <button id="lang" type="button">English</button>
+</header>
+<main>
+  <section id="pin" class="card">
+    <h1 data-t="pinTitle"></h1>
+    <p class="sub" data-t="pinSub"></p>
+    <input id="pinInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" placeholder="••••••">
+    <button class="primary wide" id="pinGo" data-t="start"></button>
+    <div id="pinErr" class="msg err" hidden></div>
+  </section>
+
+  <div id="wizard" hidden>
+    <h1 id="siteName"></h1>
+    <p class="sub" id="siteSub"></p>
+    <ol class="steps">
+      <li data-step="1" data-t="s1"></li><li data-step="2" data-t="s2"></li><li data-step="3" data-t="s3"></li><li data-step="4" data-t="s4"></li>
+    </ol>
+
+    <section id="step1" class="card">
+      <div class="status" data-t="findTitle"></div>
+      <p class="sub" data-t="findSub"></p>
+      <button id="discover" class="wide" data-t="search"></button>
+      <div id="devices" class="devices"></div>
+      <label for="brand" data-t="brand"></label>
+      <select id="brand"></select>
+      <div id="tplFields">
+        <div class="row">
+          <div><label for="ip" data-t="ip"></label><input id="ip" dir="ltr" inputmode="decimal" placeholder="192.168.1.64"></div>
+          <div><label for="channel" data-t="channel"></label><input id="channel" dir="ltr" inputmode="numeric" value="1"></div>
+        </div>
+      </div>
+      <div id="urlField" hidden><label for="uri" data-t="uri"></label><input id="uri" dir="ltr" placeholder="rtsp://192.168.1.64:554/..."></div>
+      <div id="fileField" hidden><label for="path" data-t="file"></label><input id="path" dir="ltr" placeholder="data/footage/clip.mp4"></div>
+      <div id="webcamField" hidden><label for="camIndex" data-t="camIndex"></label><input id="camIndex" dir="ltr" inputmode="numeric" value="0"></div>
+      <div id="authFields" class="row">
+        <div><label for="user" data-t="user"></label><input id="user" dir="ltr" autocomplete="off" value="admin"></div>
+        <div><label for="password" data-t="password"></label><input id="password" type="password" dir="ltr" autocomplete="off"></div>
+      </div>
+      <button class="primary wide" id="toTest" data-t="next"></button>
+      <div id="err1" class="msg err" hidden></div>
+    </section>
+
+    <section id="step2" class="card" hidden>
+      <div id="probeStatus" class="status"></div>
+      <div id="facts" class="facts" hidden></div>
+      <ul id="advice" class="advice"></ul>
+      <div class="pic" id="pic2" hidden><img id="img2" alt=""></div>
+      <div class="actions">
+        <button id="back2" data-t="back"></button>
+        <button id="mainStream" data-t="tryMain" hidden></button>
+        <button class="primary" id="toZone" data-t="next" disabled></button>
+      </div>
+    </section>
+
+    <section id="step3" class="card" hidden>
+      <div class="status" data-t="zoneTitle"></div>
+      <p class="sub" data-t="zoneSub"></p>
+      <div class="pic" id="pic3"><img id="img3" alt=""><canvas id="draw"></canvas></div>
+      <div class="actions"><button id="undo" data-t="undo"></button><button id="clear" data-t="clear"></button></div>
+      <div class="row">
+        <div><label for="camUr" data-t="camUr"></label><input id="camUr" placeholder="گیٹ کیمرہ"></div>
+        <div><label for="camEn" data-t="camEn"></label><input id="camEn" dir="ltr" placeholder="Gate camera"></div>
+      </div>
+      <div class="row">
+        <div><label for="zoneUr" data-t="zoneUr"></label><input id="zoneUr" placeholder="مین گیٹ"></div>
+        <div><label for="zoneEn" data-t="zoneEn"></label><input id="zoneEn" dir="ltr" placeholder="Main gate"></div>
+      </div>
+      <div class="actions"><button id="back3" data-t="back"></button><button class="primary" id="toSave" data-t="next" disabled></button></div>
+    </section>
+
+    <section id="step4" class="card" hidden>
+      <div class="status" data-t="testTitle"></div>
+      <p class="sub" data-t="testSub"></p>
+      <button id="detect" class="wide" data-t="runTest"></button>
+      <div id="detectOut" class="msg good" hidden></div>
+      <div class="pic" id="pic4" hidden><img id="img4" alt=""></div>
+      <div class="actions"><button id="back4" data-t="back"></button><button class="primary" id="save" data-t="save"></button></div>
+      <div id="saved" class="msg good" hidden></div>
+      <div id="err4" class="msg err" hidden></div>
+      <button id="another" class="wide" data-t="another" hidden></button>
+    </section>
+  </div>
+</main>
+<script>
+"use strict";
+const T = {
+  ur: {
+    app: "جکیمی · کیمرہ سیٹ اپ", pinTitle: "سیٹ اپ PIN", pinSub: "ایج کی اسکرین / ٹرمینل پر لکھا 6 ہندسوں کا PIN درج کریں",
+    start: "شروع کریں", s1: "1 · کیمرہ", s2: "2 · کنکشن", s3: "3 · زون", s4: "4 · ٹیسٹ",
+    findTitle: "کیمرہ ڈھونڈیں", findSub: "ریکارڈر (DVR/NVR) اور یہ ایج ایک ہی نیٹ ورک پر ہوں",
+    search: "نیٹ ورک پر تلاش کریں", searching: "تلاش ہو رہی ہے…", none: "کوئی ONVIF ڈیوائس نہیں ملی؛ نیچے برانڈ اور IP خود لکھیں",
+    brand: "برانڈ", ip: "ریکارڈر کا IP", channel: "چینل", uri: "RTSP پتہ", file: "ویڈیو فائل (ٹیسٹ)",
+    user: "یوزر نیم", password: "پاس ورڈ", next: "آگے", back: "واپس", tryMain: "مین اسٹریم آزمائیں",
+    otherUrl: "دوسرا (RTSP پتہ)", testFile: "ویڈیو فائل (ٹیسٹ)", webcam: "اس لیپ ٹاپ / USB کا کیمرہ", camIndex: "کیمرہ نمبر (عموماً 0)",
+    checking: "کنکشن چیک ہو رہا ہے…", connected: "کیمرہ مل گیا", failed: "کنکشن نہیں ہوا",
+    size: "سائز", fps: "فریم/سیکنڈ", lost: "ضائع",
+    zoneTitle: "نگرانی کا علاقہ بنائیں", zoneSub: "تصویر پر اس علاقے کے کونوں پر ٹیپ کریں جس پر نظر رکھنی ہے (کم از کم 3)",
+    undo: "آخری نقطہ ہٹائیں", clear: "صاف کریں", camUr: "کیمرے کا نام (اردو)", camEn: "کیمرے کا نام (English)",
+    zoneUr: "زون کا نام (اردو)", zoneEn: "زون کا نام (English)",
+    testTitle: "ٹیسٹ اور محفوظ کریں", testSub: "ڈیٹیکٹر چند فریم دیکھ کر بتائے گا کیا نظر آیا؛ پھر محفوظ کریں",
+    runTest: "ڈیٹیکشن ٹیسٹ", testing: "دیکھ رہے ہیں…", save: "محفوظ کریں", saving: "محفوظ ہو رہا ہے…",
+    saved: "محفوظ ہو گیا", restart: "اب ایج دوبارہ چلائیں (make edge) تاکہ نیا کیمرہ شروع ہو",
+    another: "ایک اور کیمرہ", seen: "نظر آیا", nothing: "ابھی کچھ نظر نہیں آیا (خالی منظر بھی ٹھیک ہے)",
+    cls: { person: "افراد", motorcycle: "موٹر سائیکل", bicycle: "سائیکل", car: "گاڑیاں", truck: "ٹرک", bus: "بس" },
+    cameras: (n) => `${n} کیمرے پہلے سے ہیں`, ms: "ملی سیکنڈ فی فریم",
+  },
+  en: {
+    app: "Jikimi · camera setup", pinTitle: "Setup PIN", pinSub: "Enter the 6-digit PIN shown on the edge's screen / terminal",
+    start: "Start", s1: "1 · Camera", s2: "2 · Connection", s3: "3 · Zone", s4: "4 · Test",
+    findTitle: "Find the camera", findSub: "The recorder (DVR/NVR) and this edge must be on the same network",
+    search: "Search the network", searching: "Searching…", none: "No ONVIF device answered; enter the brand and IP below",
+    brand: "Brand", ip: "Recorder IP", channel: "Channel", uri: "RTSP address", file: "Video file (test)",
+    user: "Username", password: "Password", next: "Next", back: "Back", tryMain: "Try the main stream",
+    otherUrl: "Other (RTSP address)", testFile: "Video file (test)", webcam: "This laptop's / a USB camera", camIndex: "Camera number (usually 0)",
+    checking: "Checking the connection…", connected: "Camera found", failed: "Could not connect",
+    size: "Size", fps: "Frames/s", lost: "Lost",
+    zoneTitle: "Draw the watched area", zoneSub: "Tap the corners of the area to watch on the picture (at least 3)",
+    undo: "Remove last point", clear: "Clear", camUr: "Camera name (Urdu)", camEn: "Camera name (English)",
+    zoneUr: "Zone name (Urdu)", zoneEn: "Zone name (English)",
+    testTitle: "Test and save", testSub: "The detector looks at a few frames and says what it saw; then save",
+    runTest: "Detection test", testing: "Looking…", save: "Save", saving: "Saving…",
+    saved: "Saved", restart: "Now restart the edge (make edge) so the new camera starts",
+    another: "Another camera", seen: "Seen", nothing: "Nothing seen right now (an empty view is fine)",
+    cls: { person: "people", motorcycle: "motorcycles", bicycle: "bicycles", car: "cars", truck: "trucks", bus: "buses" },
+    cameras: (n) => `${n} cameras already set up`, ms: "ms per frame",
+  },
+};
+let lang = "ur", pin = "", state = null, chosen = null, points = [], stream = "sub";
+const $ = (id) => document.getElementById(id);
+const t = (k) => T[lang][k];
+
+function render() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ur" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = t(el.dataset.t); });
+  $("lang").textContent = lang === "ur" ? "English" : "اردو";
+  if (state) {
+    $("siteName").textContent = state.site_name || state.site_id;
+    $("siteSub").textContent = t("cameras")(state.cameras.length);
+    fillBrands();
+  }
+}
+$("lang").onclick = () => { lang = lang === "ur" ? "en" : "ur"; render(); };
+
+async function call(path, body) {
+  const res = await fetch(path, {
+    method: body === undefined ? "GET" : "POST",
+    headers: { "X-Setup-Pin": pin, "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+function busy(btn, label) {
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span> ${label}`;
+  return () => { btn.disabled = false; btn.innerHTML = old; };
+}
+function show(el, text) { el.textContent = text; el.hidden = !text; }
+function step(n) {
+  [1, 2, 3, 4].forEach((i) => { $("step" + i).hidden = i !== n; });
+  document.querySelectorAll(".steps li").forEach((li) => {
+    const i = Number(li.dataset.step);
+    li.className = i === n ? "on" : i < n ? "done" : "";
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+$("pinGo").onclick = async () => {
+  pin = $("pinInput").value.trim();
+  try {
+    state = await call("/api/state");
+    try { sessionStorage.setItem("jikimi.setup.pin", pin); } catch { /* private mode */ }
+    $("pin").hidden = true;
+    $("wizard").hidden = false;
+    render();
+    step(1);
+  } catch (e) { show($("pinErr"), e.message); }
+};
+$("pinInput").onkeydown = (e) => { if (e.key === "Enter") $("pinGo").click(); };
+
+function fillBrands() {
+  const sel = $("brand"), keep = sel.value;
+  sel.innerHTML = "";
+  for (const b of state.brands) sel.add(new Option(b.id === "cpplus" ? "CP Plus" : b.id === "tplink" ? "TP-Link" : b.id[0].toUpperCase() + b.id.slice(1), b.id));
+  sel.add(new Option(t("webcam"), "webcam"));
+  sel.add(new Option(t("otherUrl"), "url"));
+  if (state.files) sel.add(new Option(t("testFile"), "file"));
+  if (keep) sel.value = keep;
+  brandFields();
+}
+function brandFields() {
+  const v = $("brand").value;
+  $("tplFields").hidden = v === "url" || v === "file" || v === "webcam";
+  $("urlField").hidden = v !== "url";
+  $("fileField").hidden = v !== "file";
+  $("webcamField").hidden = v !== "webcam";
+  $("authFields").hidden = v === "file" || v === "webcam";
+}
+$("brand").onchange = brandFields;
+
+$("discover").onclick = async () => {
+  const done = busy($("discover"), t("searching"));
+  try {
+    const { devices } = await call("/api/discover", {});
+    const box = $("devices");
+    box.innerHTML = "";
+    if (!devices.length) box.innerHTML = `<div class="msg err">${t("none")}</div>`;
+    for (const d of devices) {
+      const b = document.createElement("button");
+      b.className = "device";
+      b.type = "button";
+      b.innerHTML = `<b></b><small></small>`;
+      b.querySelector("b").textContent = d.name || d.hardware || d.ip;
+      b.querySelector("small").textContent = `${d.ip}${d.brand ? " · " + d.brand : ""}${d.hardware ? " · " + d.hardware : ""}`;
+      b.onclick = () => {
+        box.querySelectorAll(".device").forEach((x) => x.classList.remove("on"));
+        b.classList.add("on");
+        $("ip").value = d.ip;
+        if (d.brand) $("brand").value = d.brand;
+        brandFields();
+      };
+      box.appendChild(b);
+    }
+  } catch (e) { show($("err1"), e.message); }
+  done();
+};
+
+function source() {
+  const v = $("brand").value;
+  if (v === "file") return { kind: "file", path: $("path").value.trim() };
+  if (v === "webcam") return { kind: "webcam", index: Number($("camIndex").value) || 0 };
+  const auth = { user: $("user").value.trim(), password: $("password").value };
+  if (v === "url") return { kind: "url", uri: $("uri").value.trim(), ...auth };
+  return { kind: "template", brand: v, ip: $("ip").value.trim(), channel: Number($("channel").value) || 1, stream, ...auth };
+}
+
+async function runProbe() {
+  step(2);
+  const s = $("probeStatus");
+  s.className = "status";
+  s.innerHTML = `<span class="spin"></span> ${t("checking")}`;
+  $("facts").hidden = true;
+  $("advice").innerHTML = "";
+  $("pic2").hidden = true;
+  $("toZone").disabled = true;
+  $("mainStream").hidden = true;
+  try {
+    const r = await call("/api/probe", source());
+    const rep = r.report;
+    s.className = "status " + (rep.ok ? "ok" : "bad");
+    s.textContent = (rep.ok ? "✓ " : "✗ ") + t(rep.ok ? "connected" : "failed");
+    if (rep.opened) {
+      $("facts").hidden = false;
+      $("facts").innerHTML = "";
+      const facts = [[t("size"), rep.width ? `${rep.width}×${rep.height}` : "–"], [t("fps"), rep.fps_measured ?? "–"], [t("lost"), rep.read_failures]];
+      for (const [k, v] of facts) {
+        const d = document.createElement("div");
+        d.innerHTML = "<b></b><span></span>";
+        d.querySelector("b").textContent = v;
+        d.querySelector("span").textContent = k;
+        $("facts").appendChild(d);
+      }
+    }
+    (lang === "ur" ? r.advice_ur : rep.advice).forEach((a) => { const li = document.createElement("li"); li.textContent = a; $("advice").appendChild(li); });
+    if (r.preview) {
+      $("img2").src = r.preview;
+      $("img3").src = r.preview;
+      $("pic2").hidden = false;
+      chosen = source();
+      $("toZone").disabled = false;
+    }
+    $("mainStream").hidden = !(source().kind === "template" && stream === "sub");
+  } catch (e) {
+    s.className = "status bad";
+    s.textContent = "✗ " + e.message;
+  }
+}
+$("toTest").onclick = () => { stream = "sub"; show($("err1"), ""); runProbe(); };
+$("mainStream").onclick = () => { stream = "main"; runProbe(); };
+$("back2").onclick = () => step(1);
+
+// --- zone drawing: taps add corners (normalised 0-1), drawn over the preview ---
+const canvas = $("draw");
+function redraw() {
+  const img = $("img3"), r = img.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = r.width * dpr;
+  canvas.height = r.height * dpr;
+  const c = canvas.getContext("2d");
+  c.scale(dpr, dpr);
+  if (!points.length) return;
+  c.beginPath();
+  points.forEach(([x, y], i) => (i ? c.lineTo(x * r.width, y * r.height) : c.moveTo(x * r.width, y * r.height)));
+  if (points.length > 2) c.closePath();
+  c.fillStyle = "rgba(16,185,129,.25)";
+  c.strokeStyle = "#10b981";
+  c.lineWidth = 3;
+  if (points.length > 2) c.fill();
+  c.stroke();
+  for (const [x, y] of points) { c.beginPath(); c.arc(x * r.width, y * r.height, 7, 0, Math.PI * 2); c.fillStyle = "#fff"; c.fill(); c.stroke(); }
+  zoneReady();
+}
+function zoneReady() { $("toSave").disabled = points.length < 3 || !($("camUr").value.trim() || $("camEn").value.trim()); }
+canvas.addEventListener("pointerdown", (e) => {
+  const r = canvas.getBoundingClientRect();
+  points.push([Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1), Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1)]);
+  redraw();
+});
+$("undo").onclick = () => { points.pop(); redraw(); zoneReady(); };
+$("clear").onclick = () => { points = []; redraw(); zoneReady(); };
+["camUr", "camEn"].forEach((id) => { $(id).oninput = zoneReady; });
+$("img3").onload = redraw;
+window.addEventListener("resize", redraw);
+$("toZone").onclick = () => { step(3); requestAnimationFrame(redraw); };
+$("back3").onclick = () => step(2);
+$("toSave").onclick = () => {
+  step(4);
+  show($("saved"), "");
+  show($("err4"), "");
+  $("detectOut").hidden = true;
+  $("pic4").hidden = true;
+  $("save").disabled = false;
+  $("another").hidden = true;
+};
+$("back4").onclick = () => step(3);
+
+$("detect").onclick = async () => {
+  const done = busy($("detect"), t("testing"));
+  show($("err4"), "");
+  try {
+    const r = await call("/api/detect", chosen);
+    const parts = Object.entries(r.counts).map(([k, n]) => `${n} ${T[lang].cls[k] || k}`);
+    show($("detectOut"), parts.length ? `${t("seen")}: ${parts.join("، ")} · ${r.ms_per_frame} ${t("ms")}` : t("nothing"));
+    $("img4").src = r.picture;
+    $("pic4").hidden = false;
+  } catch (e) { show($("err4"), e.message); }
+  done();
+};
+
+$("save").onclick = async () => {
+  const done = busy($("save"), t("saving"));
+  show($("err4"), "");
+  try {
+    const r = await call("/api/save", {
+      source: chosen,
+      camera: { name: $("camEn").value.trim(), name_ur: $("camUr").value.trim(), name_roman: $("camEn").value.trim() },
+      zone: { name: $("zoneEn").value.trim(), name_ur: $("zoneUr").value.trim(), polygon: points },
+    });
+    show($("saved"), `${t("saved")}: ${r.camera_id}${r.env_var ? " (" + r.env_var + ")" : ""}. ${t("restart")}`);
+    $("save").disabled = true;
+    $("another").hidden = false;
+    state = await call("/api/state");
+    render();
+  } catch (e) { show($("err4"), e.message); done(); return; }
+  done();
+  $("save").disabled = true;
+};
+$("another").onclick = () => {
+  points = [];
+  chosen = null;
+  ["camUr", "camEn", "zoneUr", "zoneEn", "password"].forEach((id) => { $(id).value = ""; });
+  step(1);
+};
+
+try { pin = sessionStorage.getItem("jikimi.setup.pin") || ""; } catch { pin = ""; }
+render();
+if (pin) { $("pinInput").value = pin; $("pinGo").click(); }
+</script>
+</body>
+</html>

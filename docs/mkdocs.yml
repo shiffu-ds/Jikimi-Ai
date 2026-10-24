@@ -1,0 +1,24 @@
+site_name: Jikimi AI
+docs_dir: .
+site_dir: ../site
+exclude_docs: |
+  mkdocs.yml
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: teal
+nav:
+  - Home: index.md
+  - Plan review: PLAN_REVIEW.md
+  - Implementation plan: IMPLEMENTATION_PLAN.md
+  - Results: results.md
+  - Architecture: architecture/overview.md
+  - Threat model: architecture/threat_model.md
+markdown_extensions:
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

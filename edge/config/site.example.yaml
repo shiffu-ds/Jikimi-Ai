@@ -1,0 +1,59 @@
+# Real site template (plan Section 8.1). Secrets (RTSP URLs, numbers) come from the environment.
+site_id: society-gate-north
+site_name: Jikimi Homes - North Gate
+timezone: Asia/Karachi
+device_id: edge-001
+process_fps: 5            # laptop / Intel mini PC; Jetson profile: 10
+
+cameras:
+  - id: cam-gate-01
+    name: Gate camera 1
+    name_ur: گیٹ کیمرہ 1
+    name_roman: Gate-1
+    rtsp_url_env: CAM_GATE_01_RTSP      # use the camera *sub-stream* (720p or lower)
+    zones:
+      - id: gate-2
+        name: Gate 2
+        name_ur: گیٹ 2
+        polygon: [[0.55, 0.30], [0.95, 0.30], [0.95, 0.90], [0.55, 0.90]]
+    audio: false
+  - id: cam-street-02
+    name: Street camera 2
+    name_ur: گلی کیمرہ 2
+    name_roman: Gali-2
+    rtsp_url_env: CAM_STREET_02_RTSP
+
+camera_graph:              # F2 Tier 2: typical travel time between cameras (seconds)
+  - {from: cam-gate-01, to: cam-street-02, mean_s: 25, std_s: 10}
+
+plugins:
+  enabled: [loitering, snatch, camera_health, rules]
+  loitering: {window_min: 15, min_score: 0.45, min_passes: 2}
+  snatch: {min_score: 0.3, model: models/stgcn_paksnatch.onnx}
+
+models:
+  profile: laptop          # see edge/config/models.yaml
+  registry: edge/config/models.yaml
+
+reid:
+  threshold: 0.95          # appearance match for re-entries; tune per site on recorded footage
+  window_min: 15
+
+alerts:
+  alpha_alert: 0.01
+  alpha_verify: 0.05
+  cooldown_min: 15
+
+clips: {pre_s: 20, post_s: 10}
+
+offline:
+  sms_numbers_env: GUARD_SMS_NUMBERS
+  sms_min_severity: high
+  sms_grace_s: 5
+  gateway: modem           # modem | file | none
+  modem_port: /dev/ttyUSB0
+
+privacy:
+  face_detector: auto
+  snapshots: true
+  snapshot_interval_s: 5

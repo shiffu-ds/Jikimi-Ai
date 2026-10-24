@@ -1,0 +1,14 @@
+[project]
+name = "jikimi-crypto"
+version = "0.1.0"
+description = "Tamper-evidence primitives: SHA-256, Ed25519, RFC 6962 Merkle trees, canonical JSON, OpenTimestamps"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["cryptography>=44.0"]
+
+[project.optional-dependencies]
+ots = ["opentimestamps-client>=0.7"]
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.13"]
+build-backend = "uv_build"

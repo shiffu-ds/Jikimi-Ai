@@ -1,0 +1,49 @@
+# Server profile (pilot / university lab): API (+ in-process workers) + PostgreSQL/pgvector.
+# Edges connect over WireGuard; terminate TLS + mTLS (client certificates) at a reverse proxy.
+name: jikimi-server
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  postgres:
+    <<: *restart
+    image: pgvector/pgvector:0.8.7-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jikimi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run make env}
+      POSTGRES_DB: ${POSTGRES_DB:-jikimi}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../postgres/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jikimi}"]
+      interval: 5s
+      retries: 20
+
+  api:
+    <<: *restart
+    image: jikimi/server:0.1.0
+    build: { context: ../.., dockerfile: server/Dockerfile }
+    env_file: ../../.env
+    environment: &server_env
+      JIKIMI_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-jikimi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-jikimi}
+      JIKIMI_DATA_DIR: /data
+      # v0.1: workers run inside the (single) API replica so WebSocket fan-out stays local.
+      # Scale-out (several API replicas + `python -m jikimi_server workers`) needs the Redis
+      # Streams/pub-sub bus from the roadmap (docs/adr/0007-redis-streams.md).
+      JIKIMI_WORKERS_INPROCESS: "true"
+      JIKIMI_COOKIE_SECURE: "true"
+    volumes: ["serverdata:/data"]
+    ports: ["127.0.0.1:8000:8000"]   # behind the TLS reverse proxy
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  prometheus:
+    <<: *restart
+    profiles: ["observability"]
+    image: prom/prometheus:v3.1.0
+    volumes: ["../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["127.0.0.1:9090:9090"]
+
+volumes: { pgdata: {}, serverdata: {} }

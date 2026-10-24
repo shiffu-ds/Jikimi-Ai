@@ -1,0 +1,23 @@
+# /etc/systemd/system/jikimi-edge.service - edge without Docker (laptop or mini PC as pilot edge)
+# Survives power cuts: Restart=always + watchdog (the runtime pings WATCHDOG=1 while frames flow).
+[Unit]
+Description=Jikimi AI edge runtime
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=jikimi
+WorkingDirectory=/opt/jikimi
+EnvironmentFile=/opt/jikimi/.env
+ExecStart=/opt/jikimi/.venv/bin/python -m jikimi_edge --config edge/config/site.yaml run
+Restart=always
+RestartSec=3
+WatchdogSec=60
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/jikimi/data
+SupplementaryGroups=dialout
+
+[Install]
+WantedBy=multi-user.target

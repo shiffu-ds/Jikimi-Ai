@@ -1,0 +1,33 @@
+{
+  "name": "@jikimi/dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jikimi AI dashboard + guard PWA (Urdu RTL first), exported as static files served by the API",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource/noto-naskh-arabic": "5.3.0",
+    "@fontsource/noto-nastaliq-urdu": "5.3.0",
+    "lucide-react": "1.61.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

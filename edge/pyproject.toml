@@ -1,0 +1,40 @@
+[project]
+name = "jikimi-edge"
+version = "0.1.0"
+description = "Jikimi AI edge runtime: ingest -> perception -> analytics plugins -> conformal router -> outbox/SMS"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = [
+    "jikimi-contracts",
+    "jikimi-common",
+    "jikimi-crypto",
+    "jikimi-ml-runtime",
+    "numpy>=2.0",
+    "opencv-python-headless>=4.10",
+    "httpx>=0.27",
+    "pyserial>=3.5",
+]
+
+[project.optional-dependencies]
+vision = ["openvino>=2025.0", "onnxruntime>=1.20"]
+audio = ["av>=14"]  # F13: camera / microphone audio for audio events
+
+[project.scripts]
+jikimi-edge = "jikimi_edge.__main__:main"
+
+[project.entry-points."jikimi.analytics"]
+loitering = "jikimi_edge.analytics.loitering.plugin:LoiteringPlugin"
+snatch = "jikimi_edge.analytics.snatch.plugin:SnatchPlugin"
+camera_health = "jikimi_edge.analytics.camera_health.plugin:CameraHealthPlugin"
+rules = "jikimi_edge.analytics.rules.plugin:RulesPlugin"
+audio = "jikimi_edge.analytics.audio.plugin:AudioPlugin"
+
+[tool.uv.sources]
+jikimi-contracts = { workspace = true }
+jikimi-common = { workspace = true }
+jikimi-crypto = { workspace = true }
+jikimi-ml-runtime = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.13"]
+build-backend = "uv_build"

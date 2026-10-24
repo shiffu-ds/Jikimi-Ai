@@ -1,0 +1,67 @@
+# Demo site: two simulated cameras (no hardware needed). Copy site.example.yaml for real cameras.
+site_id: society-gate-north
+site_name: Jikimi Homes - North Gate
+timezone: Asia/Karachi
+device_id: edge-demo-001
+process_fps: 5            # laptop profile (Section 7.11): 2 cameras x 5 fps
+
+cameras:
+  - id: cam-gate-01
+    name: Gate camera 1
+    name_ur: گیٹ کیمرہ 1
+    name_roman: Gate-1
+    source: sim:demo_gate
+    zones:
+      - id: gate-2
+        name: Gate 2
+        name_ur: گیٹ 2
+        polygon: [[0.50, 0.42], [0.86, 0.42], [0.92, 0.86], [0.44, 0.86]]
+  - id: cam-street-02
+    name: Market street camera 2
+    name_ur: بازار کیمرہ 2
+    name_roman: Bazaar-2
+    source: sim:demo_street
+    zones:
+      - id: market-front
+        name: Market front
+        name_ur: بازار کا سامنا
+        polygon: [[0.20, 0.40], [0.80, 0.40], [0.86, 0.86], [0.14, 0.86]]
+
+camera_graph:              # typical travel time between cameras (cross-camera routes, F2 Tier 2)
+  - {from: cam-gate-01, to: cam-street-02, mean_s: 25, std_s: 10}
+
+plugins:
+  enabled: [loitering, snatch, camera_health, rules]
+  loitering: {window_min: 15, min_score: 0.45, min_passes: 2}
+  snatch: {min_score: 0.3, model: models/stgcn_paksnatch.onnx, backend: onnxruntime}
+  camera_health: {}
+  rules: {dir: edge/config/rules}
+
+reid:
+  threshold: 0.95          # appearance match for re-entries; tune per site on recorded footage
+  window_min: 15
+
+alerts:
+  alpha_alert: 0.01       # F7: target false-alarm rate for ALERT_NOW
+  alpha_verify: 0.05      # VERIFY band
+  log_only_max_p: 0.25
+  cooldown_min: 15
+  send_log_only: true
+
+clips: {pre_s: 20, post_s: 10}
+
+offline:
+  sms_numbers_env: GUARD_SMS_NUMBERS     # comma separated, e.g. +923001234567
+  sms_min_severity: high
+  sms_grace_s: 5          # fix vs plan v2.3 (was 30 s, which broke the < 20 s SMS target)
+
+privacy:
+  face_detector: auto     # auto = YuNet if models/face_detection_yunet_2023mar.onnx exists
+  snapshots: true
+  snapshot_interval_s: 3
+
+paths:
+  calibration_dir: edge/config/calibration
+
+event_mode:
+  current: normal         # F16: normal | ramadan | chand_raat | eid | muharram

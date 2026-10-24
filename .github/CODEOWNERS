@@ -1,0 +1,10 @@
+# Owners by role (plan Section 17.1). Replace the handles with your team's GitHub users.
+/packages/                @jikimi/platform
+/edge/                    @jikimi/platform
+/edge/src/jikimi_edge/analytics/  @jikimi/temporal-ml @jikimi/vision-ml
+/server/                  @jikimi/platform
+/server/src/jikimi_server/search/ @jikimi/llm
+/apps/                    @jikimi/product
+/ml/                      @jikimi/temporal-ml
+/datasets/                @jikimi/vision-ml @jikimi/temporal-ml
+/docs/                    @jikimi/product

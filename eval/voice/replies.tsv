@@ -1,0 +1,103 @@
+# intent	text  (written guard replies in Roman Urdu, Urdu, Devanagari and English; "none" = cannot tell)
+ack	haan dekh liya
+ack	ji dekh liya hai
+ack	theek hai main dekhta hoon
+ack	acha main aa raha hoon
+ack	ok sir
+ack	han ji main pohanch gaya
+ack	dekh raha hoon bhai
+ack	main ja raha hoon gate pe
+ack	jee haan nazar hai
+ack	okay check karta hoon
+ack	dekh lia
+ack	main ne dekha hai
+ack	aa gaya hoon gate par
+ack	check kar raha hoon
+ack	nazar rakh raha hoon
+ack	mil gaya, dekh raha hoon
+ack	جی ہاں دیکھ لیا
+ack	ٹھیک ہے میں آ رہا ہوں
+ack	میں دیکھ رہا ہوں
+ack	ہاں جی پہنچ گیا ہوں
+ack	اچھا میں چیک کرتا ہوں
+ack	دیکھ لیا ہے سر
+ack	ابھی جا رہا ہوں
+ack	میں نے دیکھا ہے
+ack	हाँ देख लिया
+ack	ठीक है मैं आ रहा हूँ
+ack	मैं देख रहा हूँ
+ack	हां जी पहुंच गया
+ack	I have seen it
+ack	okay I am going
+ack	yes, on my way
+ack	got it
+false_alarm	ghalat alarm hai
+false_alarm	yeh galat hai
+false_alarm	koi nahi hai yahan
+false_alarm	kuch nahi hai sab theek hai
+false_alarm	apna banda tha
+false_alarm	sab khairiyat hai
+false_alarm	jhoota alarm
+false_alarm	billi thi
+false_alarm	hawa se patta hila tha
+false_alarm	nahi bhai kuch nahi
+false_alarm	dekh liya koi nahi hai
+false_alarm	apne log hain
+false_alarm	false alarm hai
+false_alarm	nahi nahi
+false_alarm	یہ غلط الارم ہے
+false_alarm	کوئی نہیں ہے
+false_alarm	سب ٹھیک ہے
+false_alarm	کچھ بھی نہیں ہے
+false_alarm	اپنا بندہ تھا
+false_alarm	غلطی سے بجا ہے
+false_alarm	نہیں جی
+false_alarm	गलत अलार्म है
+false_alarm	कोई नहीं है
+false_alarm	सब ठीक है
+false_alarm	अपना आदमी था
+false_alarm	false alarm
+false_alarm	nothing here
+false_alarm	nobody is there
+false_alarm	all clear
+need_help	madad chahiye
+need_help	jaldi aao
+need_help	chor hai jaldi aao
+need_help	police bulao
+need_help	do bande hain bike par, madad bhejo
+need_help	bachao
+need_help	daku hain
+need_help	goli chali hai
+need_help	aag lagi hai
+need_help	ek banda zakhmi hai
+need_help	mobile chheen ke bhaag gaye
+need_help	jaldi kisi ko bhejo
+need_help	backup chahiye
+need_help	khatra hai
+need_help	مدد چاہیے
+need_help	جلدی آؤ
+need_help	چور ہے
+need_help	پولیس کو بلاؤ
+need_help	بچاؤ
+need_help	ڈاکو آ گئے ہیں
+need_help	فائرنگ ہو رہی ہے
+need_help	آگ لگی ہے
+need_help	मदद चाहिए
+need_help	जल्दी आओ
+need_help	चोर है
+need_help	पुलिस बुलाओ
+need_help	need help
+need_help	send police
+need_help	there is a thief
+need_help	emergency
+none	kya hua
+none	kaun sa gate
+none	abhi batata hoon
+none	ek minute
+none	کیا ہوا
+none	کون سا گیٹ
+none	क्या हुआ
+none	hello
+none	ghalat alarm nahi hai
+none	nahi dekha
+none	madad nahi chahiye

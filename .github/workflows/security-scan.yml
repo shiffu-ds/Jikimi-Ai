@@ -1,0 +1,15 @@
+name: security-scan
+on:
+  pull_request:
+  schedule: [{ cron: "0 3 * * 1" }]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: astral-sh/setup-uv@v6
+      - run: uv export --frozen --all-packages --no-hashes > requirements.txt && uvx pip-audit -r requirements.txt
+      - run: cd apps/dashboard && npm audit --omit=dev --audit-level=high

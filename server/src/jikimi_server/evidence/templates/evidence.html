@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ m.evidence_id }} - Jikimi AI evidence report</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm;
+    @bottom-left { content: "Jikimi AI · {{ m.evidence_id }} · faces blurred · generated automatically; decisions are made by people"; font: 7.5pt "Noto Sans", sans-serif; color: #6b7280; }
+    @bottom-right { content: "Page " counter(page) " / " counter(pages); font: 7.5pt "Noto Sans", sans-serif; color: #6b7280; } }
+  * { box-sizing: border-box; }
+  body { font-family: "Noto Sans", "DejaVu Sans", sans-serif; font-size: 9.5pt; color: #111827; margin: 0; }
+  .ur { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", "Noto Sans Arabic", serif; direction: rtl; text-align: right; line-height: 1.95; unicode-bidi: embed; }
+  .ur-h { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif; direction: rtl; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0f766e; padding-bottom: 6px; margin-bottom: 8px; }
+  .brand { font-size: 18pt; font-weight: 800; color: #0f766e; letter-spacing: .5px; }
+  .brand small { display: block; font-size: 8.5pt; font-weight: 500; color: #475569; letter-spacing: 0; }
+  .hangul { height: 8pt; width: 24pt; vertical-align: -1pt; }
+  .title { text-align: center; }
+  .title .en { font-size: 13pt; font-weight: 700; }
+  .title .ur-h { font-size: 15pt; color: #0f172a; }
+  .qr { width: 92px; text-align: center; font-size: 7pt; color: #475569; }
+  .qr img { width: 92px; height: 92px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  th, td { border: 1px solid #e2e8f0; padding: 3.5px 6px; vertical-align: top; }
+  th { background: #f1f5f9; text-align: left; font-weight: 600; width: 28%; }
+  h2 { font-size: 10.5pt; margin: 9px 0 3px; color: #0f766e; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; }
+  h2.ur-h { text-align: right; font-size: 13pt; }
+  .alert { border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 9px; margin: 6px 0; page-break-inside: avoid; }
+  .alert .meta { font-size: 8.5pt; color: #475569; }
+  .sev-high { border-left: 5px solid #dc2626; } .sev-medium { border-left: 5px solid #d97706; } .sev-low { border-left: 5px solid #64748b; }
+  .frames { display: flex; flex-wrap: wrap; gap: 6px; }
+  .frame { width: 31%; page-break-inside: avoid; }
+  .frame img { max-height: 32mm; object-fit: cover; }
+  .frame img { width: 100%; border-radius: 4px; border: 1px solid #cbd5e1; }
+  .frame div { font-size: 7.5pt; color: #475569; text-align: center; }
+  .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 7.6pt; word-break: break-all; }
+  .note { background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px; padding: 7px 9px; font-size: 8.6pt; }
+  .warn { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 7px 9px; font-size: 8.2pt; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">JIKIMI AI<small><svg class="hangul" viewBox="0 0 300 100" fill="none" stroke="#0f766e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 22H58M36 24C34 46 26 62 12 78M37 46L60 76M80 10V92"/><path d="M110 14H152C152 32 144 44 128 52M114 33H150M176 8V56M120 64H168V94H120Z"/><circle cx="234" cy="51" r="22"/><path d="M276 10V92"/></svg> · Har raat, aapka pehra</small></div>
+  <div class="title">
+    <div class="ur-h">شواہد کی رپورٹ</div>
+    <div class="en">Evidence Report</div>
+    <div class="mono" style="font-size:10pt">{{ m.evidence_id }}</div>
+  </div>
+  <div class="qr"><img src="{{ qr }}" alt="verify QR"><div>Scan to verify<br><span class="ur-h">تصدیق کے لیے اسکین کریں</span></div></div>
+</header>
+
+<table>
+  <tr><th>Site / جگہ</th><td>{{ m.site_name }} <span class="mono">({{ m.site_id }})</span></td></tr>
+  <tr><th>Created / تاریخ</th><td>{{ created_local }} (Asia/Karachi)</td></tr>
+  <tr><th>Created by</th><td>{{ m.created_by }}</td></tr>
+  {% if m.case_reference %}<tr><th>Case reference / FIR</th><td>{{ m.case_reference }}</td></tr>{% endif %}
+  <tr><th>Contents</th><td>{{ m.alerts|length }} alert(s), {{ m.clips|length }} clip(s) · faces and heads blurred</td></tr>
+</table>
+
+<h2 class="ur-h">خلاصہ</h2>
+{% for a in alerts %}
+<div class="alert sev-{{ a.severity }}">
+  <div class="ur">{{ a.explanation_ur or "" }}</div>
+  <div class="meta">{{ a.time_local }} · {{ a.camera }} · {{ a.type_ur }}</div>
+</div>
+{% endfor %}
+
+<h2>Summary (English)</h2>
+{% for a in alerts %}
+<div class="alert sev-{{ a.severity }}">
+  <div><strong>{{ a.type_en }}</strong> · {{ a.time_local }} · {{ a.camera }} · severity {{ a.severity }}</div>
+  <div>{{ a.explanation_en or "" }}</div>
+  <div class="meta">Alert <span class="mono">{{ a.alert_id }}</span>{% if a.p_text %} · {{ a.p_text }}{% endif %}</div>
+</div>
+{% endfor %}
+
+{% if frames %}
+<h2>Keyframes (blurred) / کلیدی تصاویر</h2>
+<div class="frames">
+  {% for f in frames %}<div class="frame"><img src="{{ f.src }}"><div>{{ f.label }}</div></div>{% endfor %}
+</div>
+{% endif %}
+
+<h2>Integrity / سالمیت</h2>
+<table>
+  <tr><th>Manifest SHA-256</th><td class="mono">{{ manifest_sha256 }}</td></tr>
+  <tr><th>Server signature (Ed25519)</th><td class="mono">{{ m.server_key_id }}<br>{{ server_signature }}</td></tr>
+  {% for c in m.clips %}
+  <tr><th>Clip {{ c.clip_id }}</th><td class="mono">sha256 {{ c.sha256 }}<br>edge key {{ c.device_key_id }}</td></tr>
+  {% endfor %}
+  {% for a in m.alerts %}
+  <tr><th>Alert signature</th><td class="mono">{{ a.device_key_id }} · {{ a.alert_sha256 }}</td></tr>
+  {% endfor %}
+</table>
+<div class="note">
+  <b>How to verify:</b> scan the QR or open <span class="mono">{{ verify_url }}</span>. The portal recomputes the manifest
+  hash, checks the edge-device and server signatures, the daily Merkle proof and the Bitcoin timestamp (OpenTimestamps).
+  Drop this PDF or a clip on the page: your browser computes its SHA-256 locally and compares it. Changing even one byte
+  makes verification fail.
+  <div class="ur" style="margin-top:4px">تصدیق: کیو آر کوڈ اسکین کریں یا اوپر دیا گیا لنک کھولیں۔ فائل میں ایک بائٹ کی تبدیلی بھی پکڑی جاتی ہے۔</div>
+</div>
+<div class="warn">Generated by an AI-assisted system for investigation support. Not legal advice. Have the format reviewed
+by counsel and police (Qanun-e-Shahadat Order 1984, Art. 164). No face recognition is used by Jikimi AI.</div>
+</body>
+</html>

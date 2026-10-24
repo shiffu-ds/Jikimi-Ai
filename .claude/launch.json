@@ -1,0 +1,38 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jikimi-demo",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "scripts/dev.py",
+        "demo"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "jikimi-server",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "scripts/dev.py",
+        "server"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "jikimi-live",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "python",
+        "scripts/dev.py",
+        "live"
+      ],
+      "port": 8000
+    }
+  ]
+}

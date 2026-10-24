@@ -1,0 +1,3 @@
+# <camera_id> <path to an H.264 mp4>   (use consented footage only)
+cam-gate-01 data/videos/gate.mp4
+cam-street-02 data/videos/street.mp4

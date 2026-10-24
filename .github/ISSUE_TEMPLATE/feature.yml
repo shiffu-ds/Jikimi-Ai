@@ -1,0 +1,11 @@
+name: Feature
+description: Propose a feature (link F/G ids from the plan)
+labels: [feature]
+body:
+  - type: input
+    id: ids
+    attributes: { label: Feature / gap ids, placeholder: "F11, G06" }
+  - type: textarea
+    id: story
+    attributes: { label: User story + acceptance (Given / When / Then) }
+    validations: { required: true }

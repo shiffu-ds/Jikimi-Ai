@@ -1,0 +1,23 @@
+# Jikimi AI edge image for Intel/AMD CPUs (laptop, mini PC): OpenVINO + ONNX Runtime, no torch.
+# Build from the repository root: docker build -f edge/Dockerfile.cpu -t jikimi/edge-cpu .
+
+FROM python:3.12-slim-trixie
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy OMP_NUM_THREADS=4
+# ffmpeg: H.264 alert clips; libgl/libglib for OpenCV headless helpers
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg libglib2.0-0 tzdata \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.12.21 /uv /usr/local/bin/uv
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+COPY packages/ packages/
+COPY edge/ edge/
+COPY server/pyproject.toml server/pyproject.toml
+COPY server/src/ server/src/
+COPY ml/pyproject.toml ml/pyproject.toml
+COPY ml/src/ ml/src/
+RUN uv sync --frozen --no-dev --package jikimi-edge --extra vision
+ENV PATH="/app/.venv/bin:$PATH" JIKIMI_EDGE_DATA_DIR=/data
+RUN useradd --system --uid 10002 jikimi && mkdir -p /data && chown jikimi /data
+USER jikimi
+# camera health keeps running even when detector models are missing
+CMD ["python", "-m", "jikimi_edge", "--config", "/app/edge/config/site.yaml", "run"]

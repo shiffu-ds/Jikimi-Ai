@@ -1,0 +1,50 @@
+# Which model, format and backend each hardware profile uses (plan Section 7.7-7.8).
+# Files live in models/ (gitignored); `make models PROFILE=laptop` downloads + exports them.
+# Benchmark YOLO26n against YOLO11n on your own CPU with `make bench` before choosing:
+# Ultralytics reports YOLO26n as NMS-free and up to ~43 % faster on CPU (ONNX, Xeon).
+profiles:
+  laptop:                  # i5-6200U, OpenVINO INT8, 640 px
+    detector:
+      path: models/yolo11n_int8_openvino_model/yolo11n.xml
+      backend: openvino
+      device: CPU
+      imgsz: 640
+      classes: coco
+      conf: 0.3
+    pose:
+      path: models/yolo11n-pose_int8_openvino_model/yolo11n-pose.xml
+      backend: openvino
+      device: CPU
+      imgsz: 640
+      conf: 0.3
+  laptop-yolo26:
+    detector:
+      path: models/yolo26n_int8_openvino_model/yolo26n.xml
+      backend: openvino
+      imgsz: 640
+      classes: coco
+      conf: 0.3
+  edge-cpu:                # Intel mini PC
+    detector:
+      path: models/pakroads_yolo11n_int8_openvino_model/best.xml
+      backend: openvino
+      imgsz: 640
+      classes: datasets/pakroads/classes.yaml
+  onnx-cpu:                # any CPU, no OpenVINO
+    detector:
+      path: models/yolo11n.onnx
+      backend: onnxruntime
+      imgsz: 640
+      classes: coco
+      conf: 0.3
+    pose:
+      path: models/yolo11n-pose.onnx
+      backend: onnxruntime
+      imgsz: 640
+      conf: 0.3
+  edge-jetson:             # build engines on the Jetson itself
+    detector:
+      path: models/pakroads_yolo11s_int8.engine
+      backend: tensorrt
+      imgsz: 960
+      classes: datasets/pakroads/classes.yaml

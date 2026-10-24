@@ -1,0 +1,11 @@
+name: Dataset issue
+description: Label error, consent withdrawal, or datasheet problem (PakRoads / PakSnatch / RUVR)
+labels: [data]
+body:
+  - type: dropdown
+    id: dataset
+    attributes: { label: Dataset, options: [PakRoads, PakSnatch, RUVR] }
+  - type: textarea
+    id: details
+    attributes: { label: Clip / image ids and the problem. Consent withdrawals are handled privately. }
+    validations: { required: true }

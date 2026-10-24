@@ -1,0 +1,15 @@
+[project]
+name = "jikimi-ml-runtime"
+version = "0.1.0"
+description = "Hardware-portable inference (OpenVINO / ONNX Runtime / TensorRT) + YOLO decode, torch-free"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["numpy>=2.0", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+openvino = ["openvino>=2025.0"]
+onnx = ["onnxruntime>=1.20"]
+
+[build-system]
+requires = ["uv_build>=0.8.0,<0.13"]
+build-backend = "uv_build"

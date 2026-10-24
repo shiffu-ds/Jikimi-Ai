@@ -1,0 +1,6 @@
+take_id,scenario,camera_set,time_of_day,actors,bike,props,notes
+T001,S1,camA+camB+camC,day,A01;A02;A07,B1,dummy_phone,left-to-right
+T002,S1,camA+camB+camC,day,A01;A02;A07,B1,dummy_phone,right-to-left
+T003,H1,camA+camB+camC,day,A03;A07,B2,-,asks for directions 8 s
+T004,H2,camA+camB+camC,day,A04;A08,B3,parcel,delivery at gate
+T005,S2,camA+camB+camC,dusk,A05;A06;A09,B1,dummy_bag,walking victim

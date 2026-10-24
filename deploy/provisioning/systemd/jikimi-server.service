@@ -1,0 +1,18 @@
+# /etc/systemd/system/jikimi-server.service - lite server (SQLite) on the same box as the edge
+[Unit]
+Description=Jikimi AI server (API + dashboard + workers)
+After=network-online.target
+
+[Service]
+User=jikimi
+WorkingDirectory=/opt/jikimi
+EnvironmentFile=/opt/jikimi/.env
+ExecStart=/opt/jikimi/.venv/bin/python -m jikimi_server serve --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/jikimi/data
+
+[Install]
+WantedBy=multi-user.target
