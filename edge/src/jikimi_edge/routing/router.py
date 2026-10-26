@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from jikimi_contracts import AlertCandidate, AlertType, Route, Severity
+from jikimi_contracts import URGENT_PATTERNS, AlertCandidate, AlertType, Route, Severity
 
 DETERMINISTIC_TYPES = frozenset({AlertType.TAMPER, AlertType.SOS, AlertType.RULE, AlertType.NETWORK})
 
@@ -44,9 +44,17 @@ def route(alert_type: AlertType, raw_score: float, p_value: float | None, cfg: R
     return Route.LOG_ONLY
 
 
-def severity_for(alert_type: AlertType, r: Route, rule_severity: str | None = None) -> Severity:
+def severity_for(
+    alert_type: AlertType,
+    r: Route,
+    rule_severity: str | None = None,
+    pattern: str | None = None,
+    risky: bool = False,
+) -> Severity:
     """``rule_severity``: a rule's own severity, or a camera-health notice's (``view_accepted``
-    is low: an admin should look at the zones, nobody needs to run)."""
+    is low: an admin should look at the zones, nobody needs to run). ``person_in_danger``: someone
+    being hurt or taken right now (``URGENT_PATTERNS``), or followed / surrounded at night with
+    nobody else around (``risky``), is high as soon as it is worth showing at all."""
     if alert_type == AlertType.TAMPER and rule_severity:
         return Severity(rule_severity)
     if alert_type in (AlertType.TAMPER, AlertType.SOS):
@@ -55,6 +63,8 @@ def severity_for(alert_type: AlertType, r: Route, rule_severity: str | None = No
         return Severity(rule_severity) if rule_severity else Severity.MEDIUM
     if alert_type == AlertType.NETWORK:  # watch and report, nobody runs after anyone
         return Severity.MEDIUM
+    if alert_type == AlertType.PERSON_DANGER and r != Route.LOG_ONLY and (pattern in URGENT_PATTERNS or risky):
+        return Severity.HIGH
     return {Route.ALERT_NOW: Severity.HIGH, Route.VERIFY: Severity.MEDIUM, Route.LOG_ONLY: Severity.LOW}[r]
 
 

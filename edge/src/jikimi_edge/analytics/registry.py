@@ -18,6 +18,8 @@ BLOCKLIST = frozenset(
     {"face_recognition", "face_id", "facial_recognition", "demographics", "gender", "age", "ethnicity", "emotion"}
 )
 DEFAULT_PLUGINS = ("loitering", "snatch", "camera_health", "rules")
+SAFETY_PLUGINS = ("foot_snatch", "person_safety", "vehicle_theft", "crowd")
+"""Behaviour-only personal-safety plugins (no gender, age or identity: see person_safety)."""
 
 
 class BlockedPluginError(RuntimeError):
@@ -26,15 +28,23 @@ class BlockedPluginError(RuntimeError):
 
 def _builtin() -> dict[str, Callable[[], AnalyticsPlugin]]:
     from .camera_health.plugin import CameraHealthPlugin
+    from .crowd.plugin import CrowdPlugin
+    from .foot_snatch.plugin import FootSnatchPlugin
     from .loitering.plugin import LoiteringPlugin
+    from .person_safety.plugin import PersonSafetyPlugin
     from .rules.plugin import RulesPlugin
     from .snatch.plugin import SnatchPlugin
+    from .vehicle_theft.plugin import VehicleTheftPlugin
 
     return {
         "loitering": LoiteringPlugin,
         "snatch": SnatchPlugin,
         "camera_health": CameraHealthPlugin,
         "rules": RulesPlugin,
+        "foot_snatch": FootSnatchPlugin,
+        "person_safety": PersonSafetyPlugin,
+        "vehicle_theft": VehicleTheftPlugin,
+        "crowd": CrowdPlugin,
     }
 
 

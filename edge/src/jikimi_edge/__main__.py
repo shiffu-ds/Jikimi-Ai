@@ -11,6 +11,7 @@ import shutil
 import statistics
 import sys
 from pathlib import Path
+from typing import Any
 
 from jikimi_common.config import load_dotenv
 from jikimi_common.ids import short_code
@@ -69,28 +70,33 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return 0
 
 
-def _calib_versions(config: str) -> dict[str, str]:
-    from .runner import build_pipeline
-    from .settings import load_settings
-
-    s = load_settings(config, repo_root=Path.cwd())
-    pipeline, _, _ = build_pipeline(s, with_outbox=False, record_clips=False)
-    cam = next(iter(pipeline.cameras.values()))
-    return {p.name: p.version for p in cam.plugins}
-
-
-def _calib_run(config: str, camera_id: str, seed: int, scenario: str = "normal_traffic") -> dict[str, list[float]]:
+def _calib_run(
+    config: str, camera_id: str, seed: int, scenario: str = "normal_traffic", only: str = ""
+) -> dict[str, tuple[str, list[float]]]:
+    """``calibration key -> (scorer version, scores)``: one score per unit (a bike, a pair of
+    people, a burst...). Single-type plugins log ``score_log`` (key = plugin name = alert type),
+    the person-safety plugins ``score_logs`` with a key per pattern (e.g. person_in_danger_fall)."""
     from .runner import build_pipeline, replay
     from .settings import load_settings
 
     s = load_settings(config, repo_root=Path.cwd())
     pipeline, _, _ = build_pipeline(s, with_outbox=False, record_clips=False)
-    plugins = {p.name: p for p in pipeline.cameras[camera_id].plugins}
-    for name in ("loitering", "snatch"):
-        if name in plugins:
-            plugins[name].score_log = {}  # type: ignore[attr-defined]
+    wanted = {x for x in only.split(",") if x}
+    plugins = [p for p in pipeline.cameras[camera_id].plugins if not wanted or p.name in wanted]
+    for p in plugins:
+        if hasattr(p, "score_logs"):
+            p.score_logs = {}
+        elif hasattr(p, "score_log"):
+            p.score_log = {}
     replay(s, camera_id, scenario, seed=seed, pipeline=pipeline)
-    return {name: list(plugins[name].score_log.values()) for name in ("loitering", "snatch") if name in plugins}  # type: ignore[attr-defined]
+    out: dict[str, tuple[str, list[float]]] = {}
+    for p in plugins:
+        if getattr(p, "score_logs", None) is not None:
+            for key, log in p.score_logs.items():  # type: ignore[attr-defined]
+                out[key] = (p.version, list(log.values()))
+        elif getattr(p, "score_log", None) is not None:
+            out[p.name] = (p.version, list(p.score_log.values()))  # type: ignore[attr-defined]
+    return out
 
 
 def _fa_run(
@@ -102,37 +108,52 @@ def _fa_run(
     s = load_settings(config, repo_root=Path.cwd())
     s.raw.setdefault("event_mode", {})["current"] = mode  # F16: which calibration set answers
     res = replay(s, camera_id, scenario, seed=seed)
-    return [(a.type.value, a.route.value if a.route else "-") for a in res.alerts]
+    return [(_kind(a), a.route.value if a.route else "-") for a in res.alerts]
+
+
+def _kind(a: Any) -> str:
+    """Alert type, with the danger pattern or "foot" for the person-safety detectors."""
+    if a.features.get("pattern"):
+        return f"{a.type.value}.{a.features['pattern']}"
+    return f"{a.type.value}.foot" if a.features.get("on_foot") else a.type.value
 
 
 def cmd_calibrate(args: argparse.Namespace) -> int:
     """Simulator calibration (demo only). Real sites: 48-72 h of guard-confirmed footage."""
     from concurrent.futures import ProcessPoolExecutor
 
+    from .analytics.registry import SAFETY_PLUGINS
     from .calibration.store import CalibrationStore
+    from .sim.scenarios import build
 
     s = _settings(args)
-    per_run_h = 600.0 / 3600
-    runs = max(1, round(args.hours / per_run_h / len(s.cameras)))
+    if not args.plugins:  # each plugin against its own everyday population
+        safety = args.scenario == "street_life"
+        args.plugins = ",".join(SAFETY_PLUGINS if safety else ("loitering", "snatch"))
     # one seed per (run, camera): the same seed on two cameras renders the same scene twice
+    duration = build(args.scenario, 1).duration_s
+    per_run_h = duration / 3600
+    runs = max(1, round(args.hours / per_run_h / len(s.cameras)))
     jobs = [
-        (args.config, cam.id, 1000 + i * len(s.cameras) + k, args.scenario)
+        (args.config, cam.id, 1000 + i * len(s.cameras) + k, args.scenario, args.plugins)
         for i in range(runs)
         for k, cam in enumerate(s.cameras)
     ]
-    logs: dict[str, list[float]] = {"loitering": [], "snatch": []}
+    logs: dict[str, list[float]] = {}
+    versions: dict[str, str] = {}
     with ProcessPoolExecutor(max_workers=args.workers) as pool:
         for n, res in enumerate(pool.map(_calib_run, *zip(*jobs, strict=True)), 1):
-            for k, v in res.items():
-                logs[k].extend(v)
+            for k, (version, v) in res.items():
+                logs.setdefault(k, []).extend(v)
+                versions[k] = version
             print(f"run {n}/{len(jobs)}: " + " ".join(f"{k} n={len(v)}" for k, v in logs.items()), file=sys.stderr)
     camera_hours = len(jobs) * per_run_h
     store = CalibrationStore(s.calibration_dir, s.site_id)
-    for name, scores in logs.items():
-        if not scores:
+    for name, scores in sorted(logs.items()):
+        if len(scores) < 20:
+            print(f"{name}: only {len(scores)} units - not saved (needs more hours or a busier scene)")
             continue
         rate = len(scores) / camera_hours
-        versions = _calib_versions(args.config)
         path = store.save(
             name,
             args.mode,
@@ -174,8 +195,10 @@ def cmd_evaluate_fa(args: argparse.Namespace) -> int:
     from collections import Counter
     from concurrent.futures import ProcessPoolExecutor
 
+    from .sim.scenarios import build
+
     s = _settings(args)
-    per_run_h = 600.0 / 3600
+    per_run_h = build(args.scenario, 1).duration_s / 3600
     runs = max(1, round(args.hours / per_run_h / len(s.cameras)))
     jobs = [
         (args.config, cam.id, args.seed0 + i * len(s.cameras) + k, args.scenario, args.mode)
@@ -338,6 +361,11 @@ def main(argv: list[str] | None = None) -> int:
     cp.add_argument("--workers", type=int, default=3)
     cp.add_argument("--scenario", default="normal_traffic", help="festival_traffic for an event mode (F16)")
     cp.add_argument("--mode", default="normal", help="calibration set to write, e.g. chand_raat")
+    cp.add_argument(
+        "--plugins",
+        default="",
+        help="plugins to calibrate (default: loitering,snatch; the safety plugins with --scenario street_life)",
+    )
     fp = sub.add_parser("evaluate-fa", help="empirical false alarms per camera-hour on held-out normal traffic")
     fp.add_argument("--hours", type=float, default=2.0)
     fp.add_argument("--workers", type=int, default=3)

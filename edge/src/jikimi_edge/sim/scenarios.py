@@ -395,12 +395,39 @@ def build(name: str, seed: int = 1, camera_id: str = "cam-gate-01", t_offset: fl
         covered.append((330.0, 372.0))
         expected.append({"type": "camera_tamper", "t_s": [335.0, 350.0]})
     elif name == "demo_street":
+        from . import safety
+
         duration = 420.0
         layout = "street"
         bg(duration, density=0.8)
         expected.append(add_snatch(actors, ids, rng, 75.0))
+        expected.append(safety.add_foot_snatch(actors, ids, rng, 130.0))
         add_asking_directions(actors, ids, rng, 180.0)
+        expected.append(safety.add_following(actors, ids, rng, 215.0))
         expected.append(add_snatch(actors, ids, rng, 300.0))
+        expected.append(safety.add_fall(actors, ids, rng, 360.0))
+    elif name in SAFETY_SCENES:
+        from . import safety
+
+        duration, layout, night = SAFETY_SCENES[name]
+        if name == "street_life":
+            # the calibration population of the person-safety plugins: ordinary traffic plus
+            # every everyday look-alike (and the bike hard negatives of normal_traffic)
+            bg(duration)
+            add_delivery(actors, ids, rng, rng.uniform(40, 250))
+            add_asking_directions(actors, ids, rng, rng.uniform(300, 540))
+            safety.street_life(actors, ids, rng, duration)
+            forbid += ["snatch"]
+        elif name in safety.EVENTS:
+            bg(duration, density=0.5)
+            info = safety.EVENTS[name](actors, ids, rng, duration / 2)
+            expected.append(info)
+            expected.extend(info.pop("also", []))
+        else:
+            bg(duration, density=0.5)
+            for _ in range(2 if name in ("greeting", "walking_together") else 1):
+                for fn in safety.NEGATIVES[name]:
+                    fn(actors, ids, rng, rng.uniform(12.0, duration - 30.0))
     else:
         raise KeyError(f"unknown scenario '{name}' (have: {', '.join(SCENARIOS)})")
     if t_offset:
@@ -408,6 +435,28 @@ def build(name: str, seed: int = 1, camera_id: str = "cam-gate-01", t_offset: fl
             a.path = [Keyframe(k.t + t_offset, k.x, k.y) for k in a.path]
     return Scenario(name, camera_id, layout, duration, actors, covered, night, expected, forbid)
 
+
+SAFETY_SCENES: dict[str, tuple[float, str, bool]] = {  # name -> (duration s, layout, night)
+    "foot_snatch": (60.0, "street", False),
+    "foot_snatch_night": (60.0, "street", True),
+    "following_night": (90.0, "street", True),
+    "surrounded": (80.0, "street", False),
+    "struggle": (60.0, "street", False),
+    "abduction": (70.0, "street", False),
+    "fall": (70.0, "street", False),
+    "bike_theft": (140.0, "gate", False),
+    "bike_theft_pushed": (140.0, "gate", False),
+    "crowd_panic": (60.0, "street", False),
+    "greeting": (80.0, "street", False),
+    "walking_together": (110.0, "street", False),
+    "friends_circle": (150.0, "street", False),
+    "boarding": (80.0, "street", False),
+    "resting": (120.0, "street", False),
+    "owner_returns": (100.0, "gate", False),
+    "bus_rush": (60.0, "street", False),
+    "kids_playing": (60.0, "street", False),
+    "street_life": (600.0, "street", False),
+}
 
 SCENARIOS: tuple[str, ...] = (
     "normal_traffic",
@@ -420,6 +469,7 @@ SCENARIOS: tuple[str, ...] = (
     "camera_cover",
     "demo_gate",
     "demo_street",
+    *SAFETY_SCENES,
 )
 
 ScenarioFactory = Callable[[str, int], Scenario]

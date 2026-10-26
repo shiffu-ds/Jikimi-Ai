@@ -111,7 +111,9 @@ def build_pipeline(
     det = pose = None
     versions: dict[str, str] = {}
     if real_perception:
-        det, pose, versions = load_detectors(settings, need_pose="snatch" in settings.plugins)
+        det, pose, versions = load_detectors(
+            settings, need_pose=bool({"snatch", "foot_snatch"} & set(settings.plugins))
+        )
     pipeline = EdgePipeline(
         settings,
         outbox=outbox,

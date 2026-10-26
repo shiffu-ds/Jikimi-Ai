@@ -174,7 +174,7 @@ def patrol(
     return route
 
 
-INCIDENT_TYPES = ("snatch", "loitering", "sos", "rule")
+INCIDENT_TYPES = ("snatch", "loitering", "sos", "rule", "person_in_danger", "vehicle_theft")
 LOOKBACK_DAYS = 90
 
 

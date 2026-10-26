@@ -43,14 +43,18 @@ def run_case(case: dict[str, Any], seed: int) -> Result:
     from jikimi_edge.settings import load_settings
 
     settings = load_settings(ROOT / "edge/config/site.demo.yaml", repo_root=ROOT)
-    res = replay(settings, case["camera"], case["case"], seed=seed, start_ts=START)
+    start = START + 3600.0 * float(case.get("start_offset_h", 0.0))  # e.g. +9 h: 21:33 local
+    res = replay(settings, case["camera"], case["case"], seed=seed, start_ts=start)
     shown = [a for a in res.alerts if a.route != Route.LOG_ONLY]
     alerts = [
         {
             "type": a.type.value,
             "route": a.route.value if a.route else None,
-            "t_s": round(a.ts_end.timestamp() - START, 1),
+            "t_s": round(a.ts_end.timestamp() - start, 1),
             "check": a.features.get("check"),
+            "pattern": a.features.get("pattern"),
+            "on_foot": a.features.get("on_foot"),
+            "severity": a.severity.value,
         }
         for a in shown
     ]
@@ -63,13 +67,14 @@ def run_case(case: dict[str, Any], seed: int) -> Result:
             and lo <= a["t_s"] <= hi
             and RANK[a["route"]] >= RANK[exp.get("min_route", "VERIFY")]
         ]
-        if exp.get("check"):
-            hits = [a for a in hits if a["check"] == exp["check"]]
+        for k in ("check", "pattern", "on_foot"):
+            if exp.get(k) is not None:
+                hits = [a for a in hits if a[k] == exp[k]]
         if not hits:
             return Result(
                 case["case"], seed, False, f"missing {exp['type']} >= {exp.get('min_route')} in {lo}-{hi}s", alerts
             )
-    bad = [a for a in alerts if a["type"] in case.get("forbid", [])]
+    bad = [a for a in alerts if a["type"] in case.get("forbid", []) or a["pattern"] in case.get("forbid", [])]
     if bad:
         return Result(case["case"], seed, False, f"forbidden alert {bad[0]['type']} at {bad[0]['t_s']}s", alerts)
     if "max_alerts" in case and len(alerts) > case["max_alerts"]:
@@ -80,9 +85,24 @@ def run_case(case: dict[str, Any], seed: int) -> Result:
     return Result(case["case"], seed, True, "ok", alerts)
 
 
-def main() -> int:
+def _run(job: tuple[dict[str, Any], int]) -> Result:
     logging.disable(logging.WARNING)
-    results = [run_case(c, s) for c in load_cases() for s in c["seeds"]]
+    return run_case(*job)
+
+
+def main() -> int:
+    import argparse
+    from concurrent.futures import ProcessPoolExecutor
+
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--workers", type=int, default=3)
+    ap.add_argument("--only", default="", help="comma-separated case names")
+    args = ap.parse_args()
+    logging.disable(logging.WARNING)
+    only = {x for x in args.only.split(",") if x}
+    jobs = [(c, s) for c in load_cases() if not only or c["case"] in only for s in c["seeds"]]
+    with ProcessPoolExecutor(max_workers=args.workers) as pool:
+        results = list(pool.map(_run, jobs))
     width = max(len(r.case) for r in results)
     for r in results:
         print(

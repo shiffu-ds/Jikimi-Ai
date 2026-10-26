@@ -8,13 +8,16 @@ import {
   CircleDot,
   Clock,
   Hand,
+  KeyRound,
   Loader2,
   type LucideIcon,
   MessageSquareWarning,
   Network,
+  PersonStanding,
   Ruler,
   ShieldAlert,
   Siren,
+  Users,
   Volume2,
   XCircle,
 } from "lucide-react";
@@ -33,6 +36,9 @@ export const TYPE_ICON: Record<string, LucideIcon> = {
   sos: Siren,
   audio_event: Volume2,
   network_match: Network,
+  person_in_danger: PersonStanding,
+  vehicle_theft: KeyRound,
+  crowd_panic: Users,
 };
 
 const SEV: Record<string, string> = {

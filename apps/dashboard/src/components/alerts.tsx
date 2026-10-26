@@ -17,6 +17,9 @@ const TYPE_TONE: Record<string, string> = {
   camera_tamper: "bg-violet-500/15 text-violet-600 dark:text-violet-300",
   sos: "bg-red-600 text-white",
   rule: "bg-sky-500/15 text-sky-600 dark:text-sky-300",
+  person_in_danger: "bg-red-600 text-white",
+  vehicle_theft: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+  crowd_panic: "bg-red-500/15 text-red-600 dark:text-red-300",
 };
 
 export function AlertCard({ a, onChange, compact = false }: { a: AlertSummary; onChange?: () => void; compact?: boolean }) {

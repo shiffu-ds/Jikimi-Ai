@@ -162,7 +162,7 @@ export interface AlertSummary {
   short_code: string;
 }
 
-export type AlertType = "snatch" | "loitering" | "rule" | "camera_tamper" | "audio_event" | "sos" | "network_match";
+export type AlertType = "snatch" | "loitering" | "rule" | "camera_tamper" | "audio_event" | "sos" | "network_match" | "person_in_danger" | "vehicle_theft" | "crowd_panic";
 
 export interface BikeEmbedding {
   alert_id: string;

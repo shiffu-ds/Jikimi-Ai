@@ -86,7 +86,11 @@ function Detail() {
           </Link>
           <span className="inline-flex items-center gap-2 text-xl font-bold">
             <TypeIcon type={a.type} className="size-6 text-brand-500" />
-            <span className={cx(lang === "ur" && "urdu-h font-normal")}>{t.type[a.type] ?? a.type}</span>
+            <span className={cx(lang === "ur" && "urdu-h font-normal")}>
+              {t.type[a.type] ?? a.type}
+              {typeof a.features.pattern === "string" && ` · ${t.danger[a.features.pattern] ?? a.features.pattern}`}
+              {a.features.on_foot === true && ` · ${t.danger.foot}`}
+            </span>
           </span>
           <SeverityBadge severity={a.severity} />
           <StatusBadge status={a.status} />

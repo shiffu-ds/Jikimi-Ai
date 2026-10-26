@@ -111,7 +111,9 @@ class AnalyticsPlugin(Protocol):
     name: str
     version: str
     needs: frozenset[str]
-    """Subset of ``{"frame", "tracks", "poses", "audio"}``."""
+    """Subset of ``{"frame", "tracks", "poses", "person_poses", "audio"}``. ``poses`` runs the pose
+    model when a pedestrian is within reach of a bike's riders, ``person_poses`` also when two
+    pedestrians come close to each other (on-foot snatching; more pose-model time in crowds)."""
 
     def configure(self, site_cfg: dict[str, Any], camera_cfg: CameraConfig) -> None: ...
     def on_step(self, ctx: FrameContext) -> list[AlertCandidate]: ...

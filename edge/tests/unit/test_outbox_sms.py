@@ -42,6 +42,22 @@ class TestFormatter:
         text = format_alert_sms(a, "گیٹ" + "X" * 200, a.ts_end, "B1C2")
         assert len(text) <= MAX_LEN and is_gsm7(text) and "Code B1C2" in text
 
+    @pytest.mark.parametrize(
+        ("kind", "features", "words"),
+        [
+            (AlertType.SNATCH, {"on_foot": True}, "paidal shakhs"),
+            (AlertType.PERSON_DANGER, {"pattern": "following", "night": True, "alone": True}, "peeche peeche"),
+            (AlertType.PERSON_DANGER, {"pattern": "forced_into_vehicle"}, "gaari chali gayi"),
+            (AlertType.PERSON_DANGER, {"pattern": "fall"}, "gir gaya"),
+            (AlertType.VEHICLE_THEFT, {"tamper_s": 25}, "Malik tha?"),
+            (AlertType.CROWD_PANIC, {"runners": 9}, "bhagdar (9 log)"),
+        ],
+    )
+    def test_safety_alerts_fit_one_sms(self, kind: AlertType, features: dict, words: str) -> None:
+        a = _alert().model_copy(update={"type": kind, "features": features})
+        text = format_alert_sms(a, "Bazaar-2", a.ts_end.astimezone(PK_TZ), "C3D4")
+        assert words in text and len(text) <= MAX_LEN and is_gsm7(text) and "Code C3D4" in text
+
     def test_to_gsm7_drops_unsupported(self) -> None:
         assert to_gsm7("Gate–2 “ok” کالی") == 'Gate-2 "ok"'
 

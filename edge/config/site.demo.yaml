@@ -31,9 +31,14 @@ camera_graph:              # typical travel time between cameras (cross-camera r
   - {from: cam-gate-01, to: cam-street-02, mean_s: 25, std_s: 10}
 
 plugins:
-  enabled: [loitering, snatch, camera_health, rules]
+  enabled: [loitering, snatch, camera_health, rules, foot_snatch, person_safety, vehicle_theft, crowd]
   loitering: {window_min: 15, min_score: 0.45, min_passes: 2}
   snatch: {min_score: 0.3, model: models/stgcn_paksnatch.onnx, backend: onnxruntime}
+  # personal safety (behaviour only: no gender, age or identity is ever estimated)
+  foot_snatch: {min_score: 0.3}       # phone/bag snatched by someone on foot
+  person_safety: {min_score: 0.2}     # following, surrounded, struggle, dragged, forced into a car, fall
+  vehicle_theft: {min_score: 0.3, parked_min_s: 60}
+  crowd: {min_score: 0.3, min_runners: 3}
   camera_health: {}
   rules: {dir: edge/config/rules}
 

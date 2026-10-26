@@ -92,8 +92,9 @@ def _draw_person(
     look: PersonLook,
     phone: bool,
     sitting: bool = False,
+    stand_h: float | None = None,
 ) -> None:
-    h = (box[3] - box[1]) * H
+    h = (stand_h if stand_h else box[3] - box[1]) * H  # a crouching or lying body keeps its size
     th = max(1, int(h * 0.09))
     p = [_px(k[0], k[1]) for k in kps]
     # legs and arms
@@ -106,6 +107,10 @@ def _draw_person(
     for w in (9, 10):
         cv2.circle(img, p[w], max(1, th // 2 + 1), look.skin, -1, cv2.LINE_AA)
     r = max(2, int(h * 0.075 if not sitting else h * 0.085))
+    if stand_h and box[3] - box[1] < 0.5 * stand_h:  # lying: the head is at the end of the body
+        cv2.circle(img, p[0], r, look.skin, -1, cv2.LINE_AA)
+        cv2.ellipse(img, p[0], (r, max(1, r // 2)), 90, 0, 180, look.hair, -1, cv2.LINE_AA)
+        return
     hx, hy = p[0][0] - (p[0][0] - (p[3][0] + p[4][0]) // 2) // 2, p[0][1]
     cv2.circle(img, (hx, hy), r, look.skin, -1, cv2.LINE_AA)
     if look.helmet is not None:
@@ -187,7 +192,14 @@ def render(
     else:
         for d in state.draw:
             if d["kind"] == "person":
-                _draw_person(img, d["box"], d["kps"], d["look"], bool(d["phone"]))  # type: ignore[arg-type]
+                _draw_person(
+                    img,
+                    d["box"],  # type: ignore[arg-type]
+                    d["kps"],  # type: ignore[arg-type]
+                    d["look"],  # type: ignore[arg-type]
+                    bool(d["phone"]),
+                    stand_h=d.get("stand_h"),  # type: ignore[arg-type]
+                )
             elif d["kind"] == "motorcycle":
                 _draw_bike(img, d)
             else:

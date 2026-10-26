@@ -319,7 +319,31 @@ estimate", not a prediction.
 
 ### Federated learning (F14)
 
-PENDING_F14
+`python -m jikimi_ml.train.federated --rounds 6 --sigmas 0,0.01,0.1,1 --fraction 0.5` (75 min on
+the laptop): FedAvg on the snatch ST-GCN across three virtual sites holding disjoint, deliberately
+non-IID shares of PakSnatch-sim's training episodes (site A mostly snatches by day, site B mostly
+delivery and directions stops; 889 / 1,244 / 696 windows, half of the training episodes for CPU
+time), all tested on the same held-out split (1,228 windows). One local epoch per round, updates
+weighted by window counts. DP-FedAvg clips each site's update at the median non-private update norm
+(C = 2.31) and adds Gaussian noise sigma * C / 3 to the average; epsilon from Renyi-DP composition.
+
+| Training | Test AUC |
+|---|---|
+| All data pooled in one place (what federation tries to match) | 0.954 |
+| Each site alone | 0.913 / 0.884 / 0.895 |
+| **FedAvg, no noise, 6 rounds** | **0.944** (by round: 0.67, 0.84, 0.92, 0.93, 0.95, 0.94) |
+| FedAvg, sigma = 0.01 (noise 0.008 per weight) | 0.933, but epsilon ≈ 54,000 at delta = 1e-5: no real privacy |
+| FedAvg, sigma = 0.1 (0.077 per weight) | 0.47 (epsilon ≈ 680) |
+| FedAvg, sigma = 1 (0.77 per weight) | 0.50 (epsilon ≈ 21) |
+
+A site sends 1.4 MB per round and no pose window ever leaves it. Federation comes within 0.01 AUC
+of pooling everything and beats every site on its own by 0.03-0.06: that is what it buys here.
+Formal differential privacy it does not buy at this size. With three sites, noise that gives a
+meaningful epsilon destroys the model and noise that keeps the model gives nothing; the noise per
+weight is sigma * C / sites, so the sigma = 0.01 run has the per-weight noise of sigma = 1 across
+~300 sites (epsilon ≈ 15 for 6 rounds). Real DP needs a federation of hundreds of sites, not one
+mohalla. BatchNorm statistics are averaged without noise (a strict deployment would freeze them).
+Synthetic data only (`eval/reports/federated.json`).
 
 ### Audio events (F13)
 

@@ -28,6 +28,19 @@ class AlertType(StrEnum):
     SOS = "sos"
     NETWORK = "network_match"
     """F21: a bike like the one in a neighbour's confirmed incident was seen here."""
+    PERSON_DANGER = "person_in_danger"
+    """Someone may be in danger (``features.pattern``: following, surrounded, struggle, dragged,
+    forced_into_vehicle, fall). Behaviour only: nobody's gender, age or identity is estimated."""
+    VEHICLE_THEFT = "vehicle_theft"
+    """A parked two-wheeler was worked on for a long time, then taken away."""
+    CROWD_PANIC = "crowd_panic"
+    """Many people suddenly ran away from one place at once."""
+
+
+DANGER_PATTERNS: tuple[str, ...] = ("following", "surrounded", "struggle", "dragged", "forced_into_vehicle", "fall")
+"""``features.pattern`` values of ``person_in_danger`` alerts (each has its own calibration set)."""
+URGENT_PATTERNS: frozenset[str] = frozenset({"struggle", "dragged", "forced_into_vehicle", "fall"})
+"""Patterns where someone is being hurt or taken right now: high severity once past LOG_ONLY."""
 
 
 class Severity(StrEnum):

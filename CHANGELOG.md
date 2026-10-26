@@ -3,6 +3,19 @@
 ## 0.1.0 - 2026-10-24
 First runnable version of the Solo-track MVP (plan v2.4).
 
+- Personal safety (F23, ADR-0034, 2026-10-25): four behaviour-only plugins - `foot_snatch`
+  (a phone snatched by someone on foot: approach from apart, touch, a run out of sight; phone held
+  to the head raises it), `person_safety` (`person_in_danger` with `following`, `surrounded`,
+  `struggle`, `dragged`, `forced_into_vehicle`, `fall`: the moments before an assault), and
+  `vehicle_theft` (parked bike worked on, waiting accomplice, ridden or pushed away) and `crowd`
+  (people scattering from one point). No gender, age or identity is estimated. Each pattern has
+  its own calibration set from simulated street life with every everyday look-alike (greetings,
+  joggers, children at play, friends and families walking together, customers, boarding,
+  resting, owners and stuck locks, running for a rickshaw); night with nobody around raises the
+  severity, not the score. Urdu / Roman / English reasons, SMS, Hindi voice, dashboard labels,
+  search words, guard guide; 19 new golden cases (46 % hard negatives). Federated learning
+  results filled in (F14: FedAvg 0.944 vs pooled 0.954; with three sites differential privacy
+  either ruins the model or gives no real guarantee).
 - Tier 2 / Tier 3 features (2026-10-25), each measured in `docs/results.md`:
   cross-camera routes with a trajectory transformer and per-route calibration (F2, ADR-0029);
   a deterministic, read-only investigation agent with clip citations and an Analyst chat

@@ -40,6 +40,17 @@ WORDS = {
     "dobara": "दोबारा", "dekh": "देख", "lein": "लें", "aksar": "अक्सर", "hota": "होता", "pattern": "पैटर्न",
     "is": "इस", "aisa": "ऐसा", "bhi": "भी", "baar": "बार", "darja": "दर्जा", "mode": "मोड", "chand": "चाँद",
     "raat": "रात", "eid": "ईद", "ramazan": "रमज़ान", "muharram": "मुहर्रम", "bazaar": "बाज़ार",
+    "raahgeer": "राहगीर", "peeche": "पीछे", "qadam": "क़दम", "kuch": "कुछ", "chal": "चल", "raha": "रहा",
+    "rahi": "रही", "rukta": "रुकता", "jata": "जाता", "khairiyat": "ख़ैरियत", "maloom": "मालूम", "gher": "घेर",
+    "rakha": "रखा", "chaaron": "चारों", "taraf": "तरफ़", "haathapai": "हाथापाई", "zor": "ज़ोर",
+    "zabardasti": "ज़बरदस्ती", "kheench": "खींच", "bithaya": "बिठाया", "chali": "चली", "chala": "चला",
+    "zaroorat": "ज़रूरत", "call": "कॉल", "achanak": "अचानक", "gir": "गिर", "utha": "उठा", "jaayein": "जाएं",
+    "girne": "गिरने", "pehle": "पहले", "bhaag": "भाग", "khari": "खड़ी", "jhuk": "झुक", "karta": "करता",
+    "dhakel": "धकेल", "malik": "मालिक", "intezar": "इंतज़ार", "log": "लोग", "jagah": "जगह",
+    "mukhtalif": "मुख़्तलिफ़", "simt": "सिम्त", "bhaagne": "भागने", "lage": "लगे", "bhagdar": "भगदड़",
+    "waqt": "वक़्त", "aas": "आस", "koi": "कोई", "second": "सेकंड", "baat": "बात", "zameen": "ज़मीन",
+    "para": "पड़ा", "khatra": "ख़तरा", "kisi": "किसी", "sakta": "सकता", "un": "उन", "tha": "था", "thi": "थी",
+    "aaya": "आया", "ja": "जा", "dekhein": "देखें", "woh": "वो", "liye": "लिए", "use": "उसे",
 }  # fmt: skip
 
 _CONS = [

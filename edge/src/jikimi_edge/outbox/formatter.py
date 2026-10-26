@@ -51,6 +51,16 @@ def is_gsm7(text: str) -> bool:
     return all(ch in GSM7_BASIC for ch in text)
 
 
+_DANGER_ROMAN = {  # person_in_danger patterns in a few GSM-7 words
+    "following": "ek shakhs kisi ke peeche peeche chal raha hai",
+    "surrounded": "kuch log ek shakhs ko ghere hue hain",
+    "struggle": "haathapai jaisi harkat",
+    "dragged": "kisi ko zabardasti kheencha ja raha hai",
+    "forced_into_vehicle": "haathapai ke baad shakhs gaari mein, gaari chali gayi",
+    "fall": "koi gir gaya aur utha nahi",
+}
+
+
 def format_alert_sms(alert: AlertCandidate, where: str, local_time: datetime, code: str) -> str:
     f = alert.features
     hhmm = local_time.strftime("%H:%M")
@@ -60,8 +70,18 @@ def format_alert_sms(alert: AlertCandidate, where: str, local_time: datetime, co
     tail = f"Code {code}. Jawab: 1=dekh liya 2=ghalat"
     if alert.type == AlertType.LOITERING:
         body = f"{where} par mashkook {vehicle} ({f.get('riders', 1)} sawar) {f.get('passes', 0)} chakkar, {hhmm}."
+    elif alert.type == AlertType.SNATCH and f.get("on_foot"):
+        body = f"{where} par paidal shakhs raahgeer ke qareeb tez harkat ke baad bhaaga, {hhmm}. Foran jaanch karein."
     elif alert.type == AlertType.SNATCH:
         body = f"{where} par {vehicle} sawar paidal ke qareeb tez harkat, {hhmm}. Foran jaanch karein."
+    elif alert.type == AlertType.PERSON_DANGER:
+        what = _DANGER_ROMAN.get(str(f.get("pattern")), "kisi ko khatra")
+        risk = " Raat, aas paas koi nahi." if f.get("night") and f.get("alone") else ""
+        body = f"{where}: {what}, {hhmm}. Foran jaanch karein.{risk}"
+    elif alert.type == AlertType.VEHICLE_THEFT:
+        body = f"{where} par khari bike ke paas der tak jhuka shakhs bike le gaya, {hhmm}. Malik tha? Check karein."
+    elif alert.type == AlertType.CROWD_PANIC:
+        body = f"{where} par achanak bhagdar ({f.get('runners', 0)} log), {hhmm}. Foran jaanch karein."
     elif alert.type == AlertType.TAMPER:
         body = f"{where} camera {_TAMPER_ROMAN.get(str(f.get('check')), 'kharab')}, {hhmm}. Check karein."
     elif alert.type == AlertType.SOS:

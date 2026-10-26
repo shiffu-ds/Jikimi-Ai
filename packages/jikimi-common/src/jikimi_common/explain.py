@@ -226,7 +226,52 @@ def _loitering(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, 
     )
 
 
+def _context(f: Mapping[str, Any]) -> tuple[str, str, str]:
+    """Night and an empty street: why it matters more (person-safety alerts)."""
+    night, alone = bool(f.get("night")), bool(f.get("alone"))
+    if night and alone:
+        return (
+            "؛ رات کا وقت ہے اور آس پاس کوئی نہیں",
+            "; raat ka waqt hai aur aas paas koi nahi",
+            "; it is night and nobody else is around",
+        )
+    if night:
+        return "؛ رات کا وقت ہے", "; raat ka waqt hai", "; it is night"
+    if alone:
+        return "؛ آس پاس کوئی نہیں", "; aas paas koi nahi", "; nobody else is around"
+    return "", "", ""
+
+
+def _secs(s: Any) -> tuple[str, str, str]:
+    n = round(float(s or 0))
+    if n < 90:
+        return f"{n} سیکنڈ", f"{n} second", f"{n} s"
+    m = round(n / 60)
+    return f"{m} منٹ", f"{m} min", f"{m} min"
+
+
 def _snatch(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, str, str]) -> Explanation:
+    if f.get("on_foot"):
+        c_ur, c_ro, c_en = _context(f)
+        ph_ur, ph_ro, ph_en = (
+            (" (جو فون پر بات کر رہا تھا)", " (jo phone par baat kar raha tha)", " who was on the phone")
+            if f.get("item") == "phone"
+            else ("", "", "")
+        )
+        return Explanation(
+            ur=(
+                f"{cam.ur} پر {t} بجے: ایک شخص پیدل ایک راہگیر{ph_ur} کے بالکل قریب آیا، ہاتھ کی تیز حرکت ہوئی "
+                f"اور پھر وہ بھاگ کر دور چلا گیا{c_ur}۔ فوراً جانچ کریں۔ اعتماد: {conf[0]}۔"
+            ),
+            roman=(
+                f"{cam.roman} par {t} baje: ek shakhs paidal ek raahgeer{ph_ro} ke bilkul qareeb aaya, haath ki tez "
+                f"harkat hui aur phir woh bhaag kar door chala gaya{c_ro}. Foran jaanch karein. Etimad: {conf[1]}."
+            ),
+            en=(
+                f"{t} at {cam.en}: someone on foot came right up to a pedestrian{ph_en}, a fast hand movement was "
+                f"seen, then they ran off{c_en}. Check immediately. Confidence: {conf[2]}."
+            ),
+        )
     riders = int(f.get("riders", 2) or 2)
     o_ur, o_ro, o_en = object_names(str(f.get("vehicle", "motorcycle")), f.get("color"))
     p_ur, p_ro, p_en = _people(riders)
@@ -321,6 +366,131 @@ def _audio(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, str,
     )
 
 
+def _danger(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, str, str]) -> Explanation:
+    """Person in danger: what was seen, in plain words, and what to do. Never who anyone is."""
+    pattern = str(f.get("pattern") or "")
+    c_ur, c_ro, c_en = _context(f)
+    head_ur, head_ro, head_en = f"{cam.ur} پر {t} بجے: ", f"{cam.roman} par {t} baje: ", f"{t} at {cam.en}: "
+    go_ur, go_ro, go_en = "فوراً جا کر جانچ کریں", "Foran ja kar jaanch karein", "Go and check now"
+    if pattern == "following":
+        d_ur, d_ro, d_en = _secs(f.get("follow_s"))
+        n = int(f.get("stops_matched", 0) or 0)
+        what = (
+            f"ایک شخص {d_ur} سے ایک راہگیر کے کچھ قدم پیچھے چل رہا ہے؛ وہ رکتا ہے تو یہ بھی رک جاتا ہے ({n} بار)",
+            f"ek shakhs {d_ro} se ek raahgeer ke kuch qadam peeche chal raha hai; woh rukta hai to ye bhi ruk jata hai ({n} baar)",
+            f"someone has kept a few steps behind a pedestrian for {d_en}, stopping when they stop ({n} times)",
+        )
+        go_ur, go_ro, go_en = (
+            "نظر رکھیں اور قریب جا کر خیریت معلوم کریں",
+            "Nazar rakhein aur qareeb ja kar khairiyat maloom karein",
+            "Keep watch and go over to check they are all right",
+        )
+    elif pattern == "surrounded":
+        n = int(f.get("people_around", 3) or 3)
+        d_ur, d_ro, d_en = _secs(f.get("duration_s"))
+        what = (
+            f"{n} افراد نے ایک شخص کو چاروں طرف سے گھیر رکھا ہے ({d_ur} سے)",
+            f"{n} afraad ne ek shakhs ko chaaron taraf se gher rakha hai ({d_ro} se)",
+            f"{n} people have closed in around one person from all sides (for {d_en})",
+        )
+    elif pattern == "struggle":
+        d_ur, d_ro, d_en = _secs(f.get("struggle_s"))
+        what = (
+            f"دو افراد کے درمیان ہاتھا پائی یا زور زبردستی جیسی حرکت ({d_ur})",
+            f"do afraad ke darmiyan haathapai ya zor zabardasti jaisi harkat ({d_ro})",
+            f"two people pushing and pulling each other, like a struggle or a fight ({d_en})",
+        )
+    elif pattern == "dragged":
+        d_ur, d_ro, d_en = _secs(f.get("dragged_s"))
+        what = (
+            f"ایک شخص کو کوئی زبردستی ساتھ کھینچ کر لے جا رہا ہے ({d_ur})",
+            f"ek shakhs ko koi zabardasti saath kheench kar le ja raha hai ({d_ro})",
+            f"someone is being pulled along against their will ({d_en})",
+        )
+    elif pattern == "forced_into_vehicle":
+        o_ur, o_ro, o_en = object_names(str(f.get("vehicle") or "car"))
+        gender = _OBJECTS.get(str(f.get("vehicle") or "car"), ("", "", "", "f"))[3]
+        went_ur, went_ro = ("چلی گئی", "chali gayi") if gender == "f" else ("چلا گیا", "chala gaya")
+        what = (
+            f"ہاتھا پائی کے بعد ایک شخص کو {o_ur} میں بٹھایا گیا اور {o_ur} فوراً {went_ur}",
+            f"haathapai ke baad ek shakhs ko {o_ro} mein bithaya gaya aur {o_ro} foran {went_ro}",
+            f"after a struggle, a person was put into a {o_en} that drove off at once",
+        )
+        go_ur, go_ro, go_en = (
+            "فوراً سپروائزر کو بتائیں اور ضرورت ہو تو 15 پر کال کریں",
+            "Foran supervisor ko batayein aur zaroorat ho to 15 par call karein",
+            "Tell the supervisor now and call 15 if needed",
+        )
+    elif pattern == "fall":
+        d_ur, d_ro, d_en = _secs(f.get("down_s"))
+        if f.get("sudden"):
+            what = (
+                f"ایک شخص اچانک گر گیا اور {d_ur} سے اٹھا نہیں",
+                f"ek shakhs achanak gir gaya aur {d_ro} se utha nahi",
+                f"a person suddenly fell and has not got up for {d_en}",
+            )
+        else:
+            what = (
+                f"ایک شخص {d_ur} سے زمین پر پڑا ہے",
+                f"ek shakhs {d_ro} se zameen par para hai",
+                f"a person has been lying on the ground for {d_en}",
+            )
+        if f.get("after_contact"):
+            what = (
+                what[0] + "؛ گرنے سے پہلے کوئی ان کے بالکل قریب تھا",
+                what[1] + "; girne se pehle koi un ke bilkul qareeb tha",
+                what[2] + "; someone was right next to them just before",
+            )
+        go_ur, go_ro, go_en = "فوراً مدد کے لیے جائیں", "Foran madad ke liye jaayein", "Go and help now"
+    else:
+        what = ("کسی کو خطرہ ہو سکتا ہے", "kisi ko khatra ho sakta hai", "someone may be in danger")
+    return Explanation(
+        ur=f"{head_ur}{what[0]}{c_ur}۔ {go_ur}۔ اعتماد: {conf[0]}۔",
+        roman=f"{head_ro}{what[1]}{c_ro}. {go_ro}. Etimad: {conf[1]}.",
+        en=f"{head_en}{what[2]}{c_en}. {go_en}. Confidence: {conf[2]}.",
+    )
+
+
+def _theft(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, str, str]) -> Explanation:
+    """A parked bike taken after a long time at it: the guard checks whether it is the owner."""
+    o_ur, o_ro, o_en = object_names(str(f.get("vehicle") or "motorcycle"), f.get("color"))
+    d_ur, d_ro, d_en = _secs(f.get("tamper_s"))
+    if f.get("pushed"):
+        v_ur, v_ro, v_en = "اسے دھکیل کر لے گیا", "use dhakel kar le gaya", "pushed it away"
+    else:
+        v_ur, v_ro, v_en = "اسے چلا کر لے گیا", "use chala kar le gaya", "rode off on it"
+    a_ur = a_ro = a_en = ""
+    if f.get("accomplice"):
+        a_ur, a_ro, a_en = (
+            "؛ قریب ایک اور بائیک انتظار کر رہی تھی",
+            "; qareeb ek aur bike intezar kar rahi thi",
+            "; another bike was waiting nearby",
+        )
+    return Explanation(
+        ur=f"{cam.ur} پر {t} بجے: کھڑی ہوئی {o_ur} کے پاس ایک شخص {d_ur} تک جھک کر کچھ کرتا رہا، پھر {v_ur}{a_ur}۔ دیکھیں کہ یہ مالک ہی ہے۔ اعتماد: {conf[0]}۔",
+        roman=f"{cam.roman} par {t} baje: khari hui {o_ro} ke paas ek shakhs {d_ro} tak jhuk kar kuch karta raha, phir {v_ro}{a_ro}. Dekhein ke ye malik hi hai. Etimad: {conf[1]}.",
+        en=f"{t} at {cam.en}: someone spent {d_en} bent over a parked {o_en}, then {v_en}{a_en}. Check whether it is the owner. Confidence: {conf[2]}.",
+    )
+
+
+def _crowd(cam: CameraNames, t: str, f: Mapping[str, Any], conf: tuple[str, str, str]) -> Explanation:
+    n = int(f.get("runners", 0) or 0)
+    h_ur = h_ro = h_en = ""
+    if f.get("heard") == "firing":
+        h_ur, h_ro, h_en = (
+            "؛ فائرنگ جیسی آواز بھی سنی گئی",
+            "; firing jaisi awaaz bhi suni gayi",
+            "; a gunshot-like sound was heard too",
+        )
+    elif f.get("heard") == "scream":
+        h_ur, h_ro, h_en = "؛ چیخ کی آواز بھی سنی گئی", "; cheekh ki awaaz bhi suni gayi", "; a scream was heard too"
+    return Explanation(
+        ur=f"{cam.ur} پر {t} بجے: {n} لوگ اچانک ایک جگہ سے مختلف سمتوں میں بھاگنے لگے (بھگدڑ){h_ur}۔ فوراً جانچ کریں۔ اعتماد: {conf[0]}۔",
+        roman=f"{cam.roman} par {t} baje: {n} log achanak ek jagah se mukhtalif simt mein bhaagne lage (bhagdar){h_ro}. Foran jaanch karein. Etimad: {conf[1]}.",
+        en=f"{t} at {cam.en}: {n} people suddenly ran away from one spot in different directions{h_en}. Check now. Confidence: {conf[2]}.",
+    )
+
+
 def explain_alert(
     alert_type: str,
     features: Mapping[str, Any],
@@ -345,6 +515,12 @@ def explain_alert(
         return _audio(camera, t, features, conf)
     if alert_type == "network_match":
         return _network(camera, t, features)
+    if alert_type == "person_in_danger":
+        return _danger(camera, t, features, conf)
+    if alert_type == "vehicle_theft":
+        return _theft(camera, t, features, conf)
+    if alert_type == "crowd_panic":
+        return _crowd(camera, t, features, conf)
     return Explanation(
         ur=f"{camera.ur} پر {t} بجے مشکوک حرکت۔ جانچ کریں۔",
         roman=f"{camera.roman} par {t} baje mashkook harkat. Jaanch karein.",

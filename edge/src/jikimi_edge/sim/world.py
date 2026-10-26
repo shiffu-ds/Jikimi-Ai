@@ -57,12 +57,17 @@ class Actor:
     path: list[Keyframe]
     person: PersonLook | None = None
     vehicle: VehicleLook | None = None
-    postures: list[tuple[float, str]] = field(default_factory=list)  # (t, stand|walk|phone)
+    postures: list[tuple[float, str]] = field(default_factory=list)
+    """``(t, posture)`` from t on: stand | walk | phone | sit | crouch | lying (persons)."""
     reach: list[tuple[float, float, int, int]] = field(default_factory=list)
     """``(t0, t1, target_actor_id, rider_index)``: a rider's hand reaches the target's hand."""
     jerks: list[tuple[float, float, float, float]] = field(default_factory=list)
     """``(t0, t1, dx, dy)``: sudden displacement (a pedestrian being pulled)."""
     phone_until: float | None = None
+    riders_from: float | None = None
+    """Two-wheelers: riders sit on it only from this time (a parked bike until then)..."""
+    riders_until: float | None = None
+    """...and only until this time (the rider got off and parked it)."""
     label: str | None = None
 
     @property
@@ -110,18 +115,26 @@ class Actor:
         for ts, p in self.postures:
             if t >= ts:
                 current = p
-        if self.kind == "person" and current == "walk" and math.hypot(*self.velocity(t)) < 0.01:
-            current = "stand"
+        if self.kind == "person" and current == "walk":
+            speed = math.hypot(*self.velocity(t))
+            if speed < 0.01:
+                current = "stand"
+            elif self.person is not None and speed > 0.9 * self.person.height * scale_at(self.pos(t)[1]):
+                current = "run"  # more than ~0.9 body heights per second
         if self.phone_until is not None and t < self.phone_until and current in ("stand", "walk"):
             current = "phone"
         return current
 
 
 # ---------------------------------------------------------------- geometry of drawn bodies
-def person_box(x: float, y: float, look: PersonLook) -> tuple[float, float, float, float]:
+LOW_POSTURES = {"sit": (0.62, 0.5), "crouch": (0.62, 0.5), "lying": (0.26, 0.9)}
+"""posture -> (box height, box width) as fractions of the standing height."""
+
+
+def person_box(x: float, y: float, look: PersonLook, posture: str = "stand") -> tuple[float, float, float, float]:
     h = look.height * scale_at(y)
-    w = 0.38 * h
-    return (x - w / 2, y - h, x + w / 2, y)
+    fh, fw = LOW_POSTURES.get(posture, (1.0, 0.38))
+    return (x - fw * h / 2, y - fh * h, x + fw * h / 2, y)
 
 
 def bike_box(x: float, y: float) -> tuple[float, float, float, float]:
@@ -155,7 +168,22 @@ def skeleton(
     w, h = x2 - x1, y2 - y1
     cx = (x1 + x2) / 2
     kp: list[tuple[float, float]] = [(0.0, 0.0)] * NUM_KEYPOINTS
-    if posture == "sit":
+    if posture == "lying":  # on the ground, head towards ``facing``
+        cy = (y1 + y2) / 2
+
+        def at(u: float, dy: float = 0.0) -> tuple[float, float]:
+            return (cx + facing * w * (u - 0.5), cy + dy * h)
+
+        kp[0] = at(0.94, -0.15)
+        kp[1], kp[2], kp[3], kp[4] = at(0.97, -0.25), at(0.97, -0.05), at(0.9, -0.3), at(0.9, 0.0)
+        kp[5], kp[6] = at(0.8, -0.3), at(0.8, 0.3)
+        kp[7], kp[8] = at(0.66, -0.4), at(0.66, 0.4)
+        kp[9], kp[10] = at(0.55, -0.45), at(0.55, 0.45)
+        kp[11], kp[12] = at(0.45, -0.22), at(0.45, 0.22)
+        kp[13], kp[14] = at(0.25, -0.2), at(0.25, 0.2)
+        kp[15], kp[16] = at(0.04, -0.2), at(0.04, 0.2)
+        return [(float(px), float(py), 0.9) for px, py in kp]
+    if posture in ("sit", "crouch"):
         head_y, sh_y, hip_y = y1 + 0.1 * h, y1 + 0.27 * h, y1 + 0.62 * h
         knee = (cx + facing * 0.45 * w, y1 + 0.68 * h)
         ankle = (cx + facing * 0.35 * w, y1 + 0.95 * h)
@@ -167,7 +195,7 @@ def skeleton(
         kp[9] = kp[10] = wrist
     else:
         head_y, sh_y, hip_y = y1 + 0.09 * h, y1 + 0.22 * h, y1 + 0.55 * h
-        swing = 0.18 * w * math.sin(phase) if posture == "walk" else 0.0
+        swing = {"walk": 0.18, "run": 0.34}.get(posture, 0.0) * w * math.sin(phase)
         kp[13] = (cx - 0.12 * w + swing, y1 + 0.76 * h)
         kp[14] = (cx + 0.12 * w - swing, y1 + 0.76 * h)
         kp[15] = (cx - 0.15 * w + 1.6 * swing, y1 + 0.98 * h)
@@ -241,14 +269,33 @@ class World:
         hands: dict[int, tuple[float, float]] = {}
         active = [a for a in self.actors if a.active(t)]
         # pedestrians first: their hands are reach targets
+        people = []
         for a in active:
             if a.kind != "person" or a.person is None:
                 continue
             x, y = a.pos(t)
-            box = person_box(x, y, a.person)
-            kps = skeleton(box, a.posture(t), a.facing(t), phase=t * 7.0 + a.actor_id)
-            hands[a.actor_id] = (kps[10][0], kps[10][1]) if a.posture(t) == "phone" else (kps[9][0], kps[9][1])
-            draw.append({"kind": "person", "box": box, "kps": kps, "look": a.person, "phone": a.posture(t) == "phone"})
+            posture = a.posture(t)
+            box = person_box(x, y, a.person, posture)
+            phase = t * (12.0 if posture == "run" else 7.0) + a.actor_id
+            kps = skeleton(box, posture, a.facing(t), phase=phase)
+            hands[a.actor_id] = (kps[10][0], kps[10][1]) if posture == "phone" else (kps[9][0], kps[9][1])
+            people.append((a, x, y, posture, box, phase, kps))
+        for a, x, y, posture, box, phase, kps in people:
+            assert a.person is not None
+            for r0, r1, target_id, _ in a.reach:  # a pedestrian's hand reaching another's
+                if r0 <= t <= r1 and target_id in hands:
+                    amount = 1.0 - abs(t - (r0 + r1) / 2) / max((r1 - r0) / 2, 1e-6)
+                    kps = skeleton(box, posture, a.facing(t), phase, reach_to=hands[target_id], reach_amount=amount)
+            draw.append(
+                {
+                    "kind": "person",
+                    "box": box,
+                    "kps": kps,
+                    "look": a.person,
+                    "phone": posture == "phone",
+                    "stand_h": a.person.height * scale_at(y),
+                }
+            )
             if 0.0 < x < 1.0:
                 tid = self._track_id(a.actor_id)
                 tracks.append(
@@ -270,7 +317,9 @@ class World:
             if a.kind == "motorcycle" and a.vehicle is not None:
                 box = bike_box(x, y)
                 rider_draw = []
-                for i, look in enumerate(a.vehicle.riders):
+                on = (a.riders_from is None or t >= a.riders_from) and (a.riders_until is None or t < a.riders_until)
+                riders = a.vehicle.riders if on else ()
+                for i, look in enumerate(riders):
                     rbox = rider_box(x, y, facing, i)
                     target, amount = None, 0.0
                     for r0, r1, target_id, ri in a.reach:

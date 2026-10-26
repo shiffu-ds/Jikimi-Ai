@@ -91,6 +91,12 @@ bante (target 0.1). Neeche har masla, uska asar aur hal hai. Chalte hue system k
 | 58 | 8.15 | Hawkes simulation mein follow-ups ka branching ratio 1 se zyada (process phat jata) | Ghalat evaluation | α ki had (har zone par < 0.95 follow-up), fit grid bhi isi had mein |
 | 59 | 8.12 | Bohat se Android phones mein Urdu TTS awaaz nahi; Urdu script ko Hindi awaaz nahi padhti | Guard alert sun nahi pata | Roman Urdu → Devanagari (`explanation_hi`), Hindi awaaz se Urdu sunai deti hai (ADR-0033) |
 | 60 | 8.20 | Laptop / USB webcam source nahi tha | Live demo ke liye asli camera chahiye tha | `webcam:0` source (edge + wizard), 720p |
+| 61 | 8.2 | Sirf bike snatching pakdi jati thi; paidal mobile chheenna, peecha, gherao, haathapai, zabardasti gaari mein daalna, girna, khari bike ki chori, bhagdar nahi | Guard ko hamle se **pehle** ka ishara nahi milta | F23: 4 naye plugins, sirf harkat (jins/umar/pehchaan kabhi nahi), har pattern ki apni calibration (ADR-0034) |
+| 62 | 8.2 | Bachon ka "tag" khel haathapai lagta tha (score 0.90 → ALERT_NOW) | Jhoote "khatra" alert | Haathapai = jism jure rahein **aur** raftaar baar baar ulte (velocity reversals); bachon ka khel 0.27 |
+| 63 | 8.2 | Dosto ka ghera / grahakon mein khara dukandar "gherao" lagta tha (0.9) | Bazaar mein roz jhoote alert | 3+ log, 4 s ke andar, kam az kam 120° alag simton se; jo pehle se khare the woh "gherne wale" nahi |
+| 64 | 8.2 | Khari bike par jhuka shakhs rider-association mein "sawar" gina jata; chori ka waqt naapa hi nahi jata tha | Bike chori kabhi nahi pakdi jati | Chori plugin har shakhs ko dekhta hai (khari bike ka koi sawar nahi hota) |
+| 65 | 8.2 | Bhagdar mein har qareeb jodi "paidal snatch" ban jati (4 alert) | Ek waqiye par kai ghalat alert | Usi waqt 2+ aur log bhaagein to snatch nahi, `crowd_panic` |
+| 66 | 8.4 | `make calibrate` naye plugins ko aam traffic par calibrate kar ke street-life wali calibration mita deta | Har alert ALERT_NOW (normal mein koi milta-julta waqiya hi nahi) | Har plugin apni aam aabadi par: loitering/snatch → normal_traffic, safety → street_life |
 
 ## 3. Kya bana (v0.1) — Feature status
 
@@ -111,7 +117,7 @@ bante (target 0.1). Neeche har masla, uska asar aur hal hai. Chalte hue system k
 | F11 | Rule builder | ✅ | Roman Urdu → DSL parser (16 server + 4 edge tests), site validation, 7-din backtest, approval, signed bundle + edge par key pin, dashboard "قواعد" page |
 | F12 | Urdu voice | ✅ voice reply (Whisper small int8 → Urdu/Roman/Hindi intent, guard ki tasdeeq par hi bheja) · ✅ alert sunana (Urdu awaaz na ho to Hindi awaaz, Devanagari) · ⏳ 200 guard recordings | likhe 102 jawab: pehli baar 93.1 %; ADR-0025, ADR-0033 |
 | F13 | Audio fusion | ✅ pipeline (log-mel → CNN → noisy-OR with flash / crowd-run), firecracker hard negative · ⏳ recordings | `train_audio --data`; synthetic sirf plumbing |
-| F14 | Federated learning | ✅ FedAvg (3 virtual sites, DP noise option) | results.md "Federated learning" |
+| F14 | Federated learning | ✅ FedAvg (3 virtual sites, DP noise option) | FedAvg AUC 0.944 vs sab data ek jagah 0.954 vs har site akeli 0.88–0.91; 3 sites par DP: σ 0.01 → ε ≈ 54,000 (asal privacy nahi), σ ≥ 0.1 → model khatam; asal DP ke liye saikron sites (results.md) |
 | F15 | Hotspot + patrol | ✅ Hawkes + greedy patrol, dashboard "خطرے کا اندازہ" card | chhoti site par top-2 zones 0.54 (history 0.42); "risk estimate", prediction nahi |
 | F18 | Low-light | ✅ bana + ablation · off by default | Zero-DCE++ nuqsaan (0.56 → 0.25), CLAHE neutral |
 | F21 | Mohalla network | ✅ opt-in, sirf tasdeeq-shuda, embedding (tasveer nahi), 2 h, audit | server + edge tests; ADR-0031 |
@@ -120,6 +126,7 @@ bante (target 0.1). Neeche har masla, uska asar aur hal hai. Chalte hue system k
 | F19 | Privacy by design | ✅ | head/face blur, encrypted originals, RBAC, retention job, FR blocklist |
 | F20 | DVR onboarding | ✅ ONVIF WS-Discovery + stream URIs (WS-Security digest), Hikvision/Dahua/CP Plus/Uniview/TP-Link RTSP templates, stream test, **Urdu setup wizard edge par** (dhoondo → preview → zone → test → save) · ⏳ asal recorder par "< 10 min" | `make setup-wizard`, `discover` / `probe-stream`, 16 tests; ADR-0028 |
 | F22 | SOS | ✅ | hold-to-send, offline queue, escalation |
+| F23 | Zaati hifazat (naya) | ✅ paidal mobile snatch · ✅ hamle se pehle: peecha, gherao, haathapai, ghaseetna, zabardasti gaari mein, girna · ✅ khari bike chori · ✅ bhagdar · ⏳ asal footage | sirf harkat, jins/umar nahi; simulator golden + street-life FA (results.md "Personal safety"); ADR-0034 |
 
 ## 4. Naape gaye nateeje (simulator par — asal numbers abhi baaqi)
 

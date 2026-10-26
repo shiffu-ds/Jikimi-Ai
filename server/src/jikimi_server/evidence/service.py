@@ -51,6 +51,10 @@ TYPE_NAMES = {
     "rule": ("قاعدہ", "Rule"),
     "sos": ("ایس او ایس", "SOS"),
     "audio_event": ("آواز", "Audio event"),
+    "network_match": ("پڑوس سے ملتی بائیک", "Bike seen at a neighbour"),
+    "person_in_danger": ("کسی کو خطرہ", "Person in danger"),
+    "vehicle_theft": ("بائیک چوری کا شبہ", "Suspected bike theft"),
+    "crowd_panic": ("بھگدڑ", "Crowd panic"),
 }
 
 

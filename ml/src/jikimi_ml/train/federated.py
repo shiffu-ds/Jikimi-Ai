@@ -6,12 +6,16 @@ Three *virtual sites* hold disjoint, differently mixed parts of PakSnatch-sim (s
 snatches by day, site B mostly delivery and directions stops, site C the rest): pose windows
 never leave a site, only weights do. Each round every site trains one local epoch from the
 global weights and sends its update; the server averages them weighted by window counts
-(FedAvg, McMahan et al. 2017). Optional client-level differential privacy: every update is
-clipped to norm C and the average gets Gaussian noise sigma * C / sites (DP-FedAvg).
+(FedAvg, McMahan et al. 2017). Optional client-level differential privacy (DP-FedAvg): every
+site's weight update is clipped to norm C and the average gets Gaussian noise sigma * C / sites.
+Noise goes on the trainable weights only; BatchNorm statistics are averaged as they are (a strict
+deployment would freeze or privatise them too).
 
-Compared on the fixed PakSnatch-sim test split: FedAvg at sigma 0 / 0.5 / 1.0, all data pooled
-in one place (what federation tries to match without moving data) and each site alone. The
-in-process loop is the algorithm Flower runs between edges; the transport is the outbox's.
+Compared on the fixed PakSnatch-sim test split: FedAvg at several sigma, all data pooled in one
+place (what federation tries to match without moving data) and each site alone. With three sites
+the noise per weight is sigma * C / 3, which is why real privacy needs many sites: the curve shows
+the price. The in-process loop is the algorithm Flower runs between edges; the transport is the
+outbox's.
 """
 
 from __future__ import annotations
@@ -44,19 +48,18 @@ def site_of(group: str) -> int:
 
 
 def flat(model: Any) -> Any:
+    """Trainable weights as one vector (what a site sends, and what DP clips and noises)."""
     import torch
 
-    return torch.cat([p.detach().reshape(-1) for p in model.state_dict().values() if p.dtype.is_floating_point])
+    return torch.cat([p.detach().reshape(-1) for p in model.parameters()])
 
 
 def load_flat(model: Any, vec: Any) -> None:
-    sd, i = model.state_dict(), 0
-    for k, v in sd.items():
-        if v.dtype.is_floating_point:
-            n = v.numel()
-            sd[k] = vec[i : i + n].reshape(v.shape).clone()
-            i += n
-    model.load_state_dict(sd)
+    i = 0
+    for p in model.parameters():
+        n = p.numel()
+        p.data.copy_(vec[i : i + n].reshape(p.shape))
+        i += n
 
 
 def local_epoch(model: Any, x: np.ndarray, y: np.ndarray, seed: int, lr: float = 1e-3) -> None:
@@ -88,6 +91,16 @@ def evaluate(model: Any, x: np.ndarray, y: np.ndarray) -> float | None:
     return round(roc_auc(y, p), 4)
 
 
+def epsilon(z: float, rounds: int, delta: float = 1e-5) -> float | None:
+    """(epsilon, delta) after ``rounds`` Gaussian mechanisms of noise multiplier z, every site in
+    every round (Renyi DP composition, Mironov 2017): the formal privacy a run actually buys."""
+    if z <= 0:
+        return None
+    alphas = np.concatenate([1 + np.logspace(-5, 1, 4000), np.arange(12.0, 4096.0)])
+    eps = rounds * alphas / (2 * z * z) + np.log(1 / delta) / (alphas - 1)
+    return round(float(eps.min()), 2)
+
+
 def main() -> None:
     import torch
 
@@ -96,20 +109,28 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data", default="data/ml/paksnatch_sim.npz")
     ap.add_argument("--rounds", type=int, default=8)
-    ap.add_argument("--sigmas", default="0,0.5,1.0", help="DP noise multipliers to compare")
-    ap.add_argument("--clip", type=float, default=1.0, help="update norm bound C")
+    ap.add_argument("--sigmas", default="0,0.001,0.01,0.05", help="DP noise multipliers; 0 first")
+    ap.add_argument("--clip", type=float, default=0.0, help="update norm bound C (0: median of the sigma=0 updates)")
     ap.add_argument("--report", default="eval/reports/federated.json")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--fraction", type=float, default=1.0, help="share of training episodes used (CPU time)")
     args = ap.parse_args()
 
     d = load_npz(args.data)
     split = group_split(d["group"])
     x, y, groups = d["x"].astype(np.float32), d["y"], d["group"]
     tr, te = split == 0, split == 2
+    if args.fraction < 1.0:  # whole episodes, chosen by hash: windows of one episode stay together
+        keep = np.asarray(
+            [int(hashlib.sha256(f"keep:{g}".encode()).hexdigest()[:8], 16) / 0xFFFFFFFF < args.fraction for g in groups]
+        )
+        tr = tr & keep
     sites = np.asarray([site_of(str(g)) for g in groups])
     parts = [(x[tr & (sites == k)], y[tr & (sites == k)]) for k in range(3)]
     xt, yt = x[te], y[te]
     report: dict[str, Any] = {
+        "training_fraction": args.fraction,
+        "rounds": args.rounds,
         "sites": [{"windows": len(py), "positives": int(py.sum())} for _, py in parts],
         "test": {"windows": len(yt), "positives": int(yt.sum())},
     }
@@ -134,26 +155,48 @@ def main() -> None:
     weights = np.asarray([len(py) for _, py in parts], dtype=np.float64)
     weights /= weights.sum()
     gen = torch.Generator().manual_seed(args.seed)
+    norms: list[float] = []
+    clip = args.clip
     for sigma in (float(s) for s in args.sigmas.split(",")):
+        if sigma > 0 and clip <= 0:  # adaptive choice: clip at the typical non-private update
+            clip = float(np.median(norms))
         glob = fresh()
         curve = []
         for r in range(args.rounds):
             base = flat(glob)
             agg = torch.zeros_like(base)
+            bufs = {n: torch.zeros_like(b) for n, b in glob.named_buffers() if b.dtype.is_floating_point}
             for k, (px, py) in enumerate(parts):
                 local = fresh()
-                load_flat(local, base.clone())
+                local.load_state_dict(glob.state_dict())
                 local_epoch(local, px, py, args.seed + 1000 * r + k)
                 delta = flat(local) - base
+                norms.append(float(delta.norm()))
                 if sigma > 0:  # client-level DP: bound every site's influence
-                    delta = delta * min(1.0, args.clip / (float(delta.norm()) + 1e-12))
+                    delta = delta * min(1.0, clip / (norms[-1] + 1e-12))
                 agg += float(weights[k]) * delta
+                for n, b in local.named_buffers():
+                    if n in bufs:
+                        bufs[n] += float(weights[k]) * b
             if sigma > 0:
-                agg += torch.randn(agg.shape, generator=gen) * sigma * args.clip / len(parts)
+                agg += torch.randn(agg.shape, generator=gen) * sigma * clip / len(parts)
             load_flat(glob, base + agg)
+            for n, b in glob.named_buffers():
+                if n in bufs:
+                    b.copy_(bufs[n])
             curve.append(evaluate(glob, xt, yt))
         report[f"fedavg_sigma_{sigma:g}"] = {"final_auc": curve[-1], "auc_by_round": curve}
         print(f"fedavg sigma={sigma}", curve, flush=True)
+    report["update_norm_median"] = round(float(np.median(norms)), 3) if norms else None
+    report["clip_norm"] = round(clip, 3)
+    report["noise_std_per_weight"] = {
+        f"sigma_{float(sg):g}": round(float(sg) * clip / len(parts), 6) for sg in args.sigmas.split(",")
+    }
+    # one site moves the weighted average by at most w_max * C, the noise there is sigma * C / sites
+    report["epsilon_at_delta_1e-5"] = {
+        f"sigma_{float(sg):g}": epsilon(float(sg) / (len(parts) * float(weights.max())), args.rounds)
+        for sg in args.sigmas.split(",")
+    }
     params = int(sum(p.numel() for p in fresh().parameters()))
     report["update_kb_per_site_per_round"] = round(params * 4 / 1024, 1)
     report["pose_windows_moved"] = 0

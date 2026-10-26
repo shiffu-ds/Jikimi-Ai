@@ -43,10 +43,13 @@ password is `JIKIMI_DEMO_PASSWORD` in your generated `.env`. Then watch the demo
 |---|---|---|---|
 | ~1:10 | Gate 1 | the same black bike with 2 riders passes the gate a 2nd time and slows next to a waiting person | **loitering ALERT** before anything happens, Urdu reason, escalation after 60 s |
 | ~1:15 | Bazaar 2 | a pillion grabs a pedestrian's phone and the bike speeds away | **snatch ALERT** ~3 s later, blurred clip, evidence button |
+| ~2:10 | Bazaar 2 | someone on foot walks up to a person on the phone, grabs it and runs | **snatch ALERT (on foot)** |
 | ~3:00 | Bazaar 2 | a rider stops to ask directions | nothing (hard negative) |
+| ~3:35 | Bazaar 2 | a walker is followed: the follower stops when they stop and hurries when they hurry | **person in danger · followed** |
 | ~4:10 | Gate 1 | a delivery rider hands over a parcel | nothing (hard negative) |
 | ~5:00 | Bazaar 2 | a second snatch (new riders, other direction) | **snatch ALERT** |
 | ~5:40 | Gate 1 | someone covers the camera | **camera tamper ALERT** |
+| ~6:05 | Bazaar 2 | a walker suddenly falls and does not get up | **person in danger · fell down** (high) |
 
 Cut the "internet" with `make net-cut`: high alerts now arrive as Roman Urdu SMS in
 `data/edge/sms/outbox.jsonl` (fake GSM modem); reply with `make sms-reply TEXT="1 A7F2"`, then
@@ -84,6 +87,7 @@ page shows today's **event mode** and the coming Ramadan / Chand Raat / Eid esti
 | ✅ | **Investigation agent (F1)** — "kal raat kaali bike 2 sawar … ye bike aur kahan gayi … report banao": read-only tools, every answer cites clips, 48/48 scripted tasks | Analyst → تفتیش |
 | ✅ | **Cross-camera routes (F2)** — a bike circling gate ↔ street is linked across cameras and scored as one route (calibrated per route) | `edge/.../cross_camera.py` |
 | ✅ | **Risk estimate + patrol (F15)**, **mohalla network (F21, opt-in, embeddings only, 2 h)**, **audio events (F13)**, **federated learning (F14)** | overview card, rules page, `ml/` |
+| ✅ | **Personal safety (F23)** — a phone snatched by someone on foot; *before an assault*: someone followed, surrounded, a struggle, dragged, pushed into a car, a sudden fall; a parked bike worked on and taken; a crowd running in panic. Behaviour only — no gender, age or identity is ever estimated (ADR-0034) | `edge/.../analytics/{foot_snatch,person_safety,vehicle_theft,crowd}` |
 | 🟡 | VLM verifier + distillation (F5/F6): built and measured, but the laptop-size VLM fails its own test and stays silent; low-light enhancement (F18) built and off (no measured gain) | [results](docs/results.md#tier-2-and-tier-3-features-v24) |
 | ⏳ | Everything that needs real data: pilot footage, guard recordings, PakSnatch / PakRoads | [roadmap](docs/PLAN_REVIEW.md#3-kya-bana-v01--feature-status) |
 

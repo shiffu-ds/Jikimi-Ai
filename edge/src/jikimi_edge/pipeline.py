@@ -50,7 +50,7 @@ from .analytics.camera_health.plugin import CameraHealthPlugin
 from .analytics.cross_camera import MIN_SEGMENTS, CrossCameraLinker, Segment, TrajectoryScorer, turns_of
 from .analytics.registry import build_plugins, resolve_needs
 from .analytics.rules.plugin import RulesPlugin
-from .analytics.snatch.pair_builder import pairs_in_reach
+from .analytics.snatch.pair_builder import pairs_in_reach, people_in_reach
 from .calibration.store import CalibrationStore
 from .evidence.signer import DeviceSigner
 from .ingest.clip_recorder import ClipJob, ClipRecorder, decode
@@ -71,6 +71,10 @@ NETWORK_MATCH = 0.92  # appearance similarity for a neighbour's bike (stricter t
 
 INDEXED = frozenset({"motorcycle", "bicycle", "car", "van", "bus", "truck", "rickshaw", "qingqi", "loader_rickshaw"})
 PRIORITY = {"high": 0, "medium": 1, "low": 3}
+MOTION_TYPES = frozenset(
+    {AlertType.SNATCH, AlertType.LOITERING, AlertType.PERSON_DANGER, AlertType.VEHICLE_THEFT, AlertType.CROWD_PANIC}
+)
+"""Alerts made from movement in the image: meaningless while the camera itself moves."""
 
 
 @dataclass
@@ -311,11 +315,14 @@ class EdgePipeline:
         )
         tracks, zone_events, new_ids = rt.store.update(tracks, ts, frame.image, riders_of)
         if (
-            "poses" in rt.needs
+            rt.needs & {"poses", "person_poses"}
             and not poses
             and self.pose is not None
             and frame.image is not None
-            and pairs_in_reach(tracks, riders_of, rider_ids)
+            and (
+                ("poses" in rt.needs and pairs_in_reach(tracks, riders_of, rider_ids))
+                or ("person_poses" in rt.needs and people_in_reach(tracks, rider_ids))
+            )
         ):
             persons = [t for t in tracks if t.cls == "person"]
             poses = self.pose(seen, persons)
@@ -439,7 +446,7 @@ class EdgePipeline:
     def _share_embedding(self, rt: CameraRuntime, alert: AlertCandidate) -> None:
         """Send a bike alert's appearance embedding (F21); the server keeps it only if the site
         opted in, and for 24 h at most. Never part of the signed alert, which is kept for a year."""
-        if self.outbox is None or alert.type not in (AlertType.SNATCH, AlertType.LOITERING):
+        if self.outbox is None or alert.type not in (AlertType.SNATCH, AlertType.LOITERING, AlertType.VEHICLE_THEFT):
             return
         desc, riders, color = None, None, None
         for tid in alert.track_ids:
@@ -485,7 +492,7 @@ class EdgePipeline:
             self.calibration.observe(cal_key, cand.raw_score)
         r = route(cand.type, cand.raw_score, p, self.s.routing)
         moving = (
-            cand.type in (AlertType.SNATCH, AlertType.LOITERING)
+            cand.type in MOTION_TYPES
             and rt.health_plugin is not None
             and rt.health_plugin.status.get("moving") == "warn"
         )
@@ -503,7 +510,13 @@ class EdgePipeline:
             features["calibrated"] = p is not None
             if cand.mode != "normal":  # which "normal" the p-value compares against (F16)
                 features["calibration_mode"] = self.calibration.calibrated_mode(cal_key, cand.mode)
-        sev = severity_for(cand.type, r, features.get("rule_severity") or features.get("severity"))
+        sev = severity_for(
+            cand.type,
+            r,
+            features.get("rule_severity") or features.get("severity"),
+            pattern=features.get("pattern"),
+            risky=bool(features.get("night") and features.get("alone")),
+        )
         names = self.s.camera_names(cand.camera_id)
         expl = explain_alert(cand.type.value, features, names, self.local_time(cand.ts_end), p, cand.raw_score)
         alert = cand.model_copy(

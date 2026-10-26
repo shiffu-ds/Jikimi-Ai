@@ -155,6 +155,18 @@ def test_reply_intents_in_three_scripts(text: str, intent: str | None) -> None:
         ("sos", {}),
         ("network_match", {"riders": 1, "color": "blue", "distance_km": 1.2}),
         ("audio_event", {"sound": "scream"}),
+        ("snatch", {"on_foot": True, "item": "phone", "night": True}),
+        (
+            "person_in_danger",
+            {"pattern": "following", "follow_s": 75, "stops_matched": 2, "night": True, "alone": True},
+        ),
+        ("person_in_danger", {"pattern": "surrounded", "people_around": 4, "duration_s": 9}),
+        ("person_in_danger", {"pattern": "struggle", "struggle_s": 4}),
+        ("person_in_danger", {"pattern": "dragged", "dragged_s": 3}),
+        ("person_in_danger", {"pattern": "forced_into_vehicle", "vehicle": "rickshaw"}),
+        ("person_in_danger", {"pattern": "fall", "down_s": 12, "sudden": True, "after_contact": True}),
+        ("vehicle_theft", {"color": "black", "tamper_s": 26, "accomplice": True}),
+        ("crowd_panic", {"runners": 9, "heard": "firing"}),
     ],
 )
 def test_every_alert_can_be_read_by_a_hindi_voice(kind: str, features: dict[str, object]) -> None:
@@ -167,3 +179,22 @@ def test_every_alert_can_be_read_by_a_hindi_voice(kind: str, features: dict[str,
     deva = roman_to_devanagari(roman)
     assert not re.findall(r"[A-Za-z]", deva), deva  # nothing left for the voice to spell out
     assert "23:41" in deva and "बजे" in deva
+
+
+@pytest.mark.parametrize(
+    "features",
+    [
+        {"pattern": p, "night": True, "alone": True}
+        for p in ("following", "surrounded", "struggle", "dragged", "forced_into_vehicle", "fall")
+    ],
+)
+def test_danger_reasons_are_neutral_and_say_what_to_do(features: dict[str, object]) -> None:
+    """No gender, no accusation, always an action, and the night/alone context in all scripts."""
+    cam = CameraNames(id="cam-street-02", name="Market street", name_ur="بازار", name_roman="Bazaar")
+    e = explain_alert("person_in_danger", features, cam, datetime(2026, 10, 25, 22, 5, tzinfo=PK_TZ), 0.004, 0.9)
+    for text in (e.ur, e.roman, e.en):
+        assert is_neutral(text)
+    words = set(e.en.lower().replace(";", " ").replace(".", " ").split())
+    assert words.isdisjoint({"woman", "girl", "man", "boy", "female", "male", "rape", "rapist", "thief"})
+    assert "raat ka waqt hai aur aas paas koi nahi" in e.roman and "nobody else is around" in e.en
+    assert any(w in e.roman for w in ("jaanch", "madad", "khairiyat", "15 par call"))

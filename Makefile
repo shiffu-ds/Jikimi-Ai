@@ -59,8 +59,9 @@ test-fast: ## Python tests only
 replay: ## Golden scenarios -> expected alerts (slow)
 	uv run pytest -m slow eval/tests -q
 
-calibrate: ## Conformal calibration from simulated normal traffic (demo only)
+calibrate: ## Conformal calibration from simulated normal traffic and street life (demo only)
 	uv run python -m jikimi_edge --config $(EDGE_CFG) calibrate --hours 4
+	uv run python -m jikimi_edge --config $(EDGE_CFG) calibrate --hours 10 --scenario street_life
 
 evaluate-fa: ## Empirical false alarms / camera-hour on held-out normal traffic
 	uv run python -m jikimi_edge --config $(EDGE_CFG) evaluate-fa --hours 2

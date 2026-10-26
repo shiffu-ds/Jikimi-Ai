@@ -99,6 +99,18 @@ def pairs_in_reach(
     )
 
 
+def people_in_reach(tracks: list[Track], rider_ids: frozenset[int], reach_heights: float = 0.6) -> bool:
+    """Two pedestrians of about the same size (same depth) within reach of each other: the pose
+    model's gate for the on-foot snatch plugin."""
+    peds = [t for t in tracks if t.cls == "person" and t.track_id not in rider_ids]
+    for i, a in enumerate(peds):
+        for b in peds[i + 1 :]:
+            similar = 0.67 <= a.height / max(b.height, 1e-3) <= 1.5
+            if similar and box_gap(a.bbox, b.bbox) < reach_heights * max((a.height + b.height) / 2, 0.03):
+                return True
+    return False
+
+
 def build_samples(
     ctx_tracks: list[Track],
     riders_of: dict[int, list[int]],

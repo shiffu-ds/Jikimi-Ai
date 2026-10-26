@@ -18,7 +18,7 @@ const TABS = {
   all: [] as string[],
   logged: ["logged_only"],
 } as const;
-const TYPES = ["snatch", "loitering", "camera_tamper", "sos", "rule"];
+const TYPES = ["snatch", "person_in_danger", "loitering", "vehicle_theft", "crowd_panic", "camera_tamper", "sos", "rule"];
 
 function Alerts() {
   const { site } = useAuth();

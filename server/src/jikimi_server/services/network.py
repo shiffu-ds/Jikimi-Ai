@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 from ..core import audit
 from ..db.models import Alert, AlertEmbedding, NetworkShareRow, Site
 
-SHARED_TYPES = ("snatch", "loitering", "sos")
+SHARED_TYPES = ("snatch", "loitering", "sos", "vehicle_theft")  # a stolen bike: neighbours watch for it
 
 
 def settings_of(site: Site) -> NetworkSettings:
