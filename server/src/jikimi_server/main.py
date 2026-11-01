@@ -101,6 +101,10 @@ def create_app(settings: ServerSettings | None = None) -> FastAPI:
 
         @app.get("/", include_in_schema=False)
         def root() -> dict[str, str]:
-            return {"name": "Jikimi AI", "docs": "/docs", "dashboard": "not built - run `make web`"}
+            return {
+                "name": "Jikimi AI",
+                "docs": "/docs",
+                "console": "Streamlit console: `make ui` (http://localhost:8501)",
+            }
 
     return app

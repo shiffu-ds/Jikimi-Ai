@@ -1,8 +1,6 @@
 .git
 .venv
 **/node_modules
-apps/dashboard/.next
-apps/dashboard/out
 data
 models
 **/__pycache__

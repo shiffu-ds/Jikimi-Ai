@@ -5,7 +5,7 @@
 *.pem
 *.key
 *.token
-data/
+/data/
 models/*
 !models/README.md
 

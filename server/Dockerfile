@@ -1,13 +1,5 @@
-# Jikimi AI server image: FastAPI API + workers + the static dashboard (multi-stage, slim).
+# Jikimi AI server image: FastAPI API + workers (the Streamlit console has its own image).
 # Build from the repository root: docker build -f server/Dockerfile -t jikimi/server .
-
-FROM node:24-slim AS web
-WORKDIR /web
-COPY apps/dashboard/package.json apps/dashboard/package-lock.json ./
-RUN npm ci --no-audit --no-fund
-COPY apps/dashboard/ ./
-ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
 
 FROM python:3.12-slim-trixie AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -25,8 +17,7 @@ COPY edge/src/ edge/src/
 COPY ml/pyproject.toml ml/pyproject.toml
 COPY ml/src/ ml/src/
 RUN uv sync --frozen --no-dev --package jikimi-server --extra postgres
-COPY --from=web /web/out /app/apps/dashboard/out
-ENV PATH="/app/.venv/bin:$PATH" JIKIMI_DASHBOARD_DIR=/app/apps/dashboard/out JIKIMI_DATA_DIR=/data
+ENV PATH="/app/.venv/bin:$PATH" JIKIMI_DATA_DIR=/data
 RUN useradd --system --uid 10001 jikimi && mkdir -p /data && chown jikimi /data
 USER jikimi
 EXPOSE 8000

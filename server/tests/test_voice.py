@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from jikimi_server.services.voice import Transcriber, decode
 
 from .conftest import Env
@@ -45,11 +46,13 @@ class _Heard(Transcriber):
 
 
 def test_decoder_resamples_to_16k_and_cuts_long_recordings() -> None:
+    pytest.importorskip("av")  # the "voice" extra
     assert abs(decode(_wav(1.0, 8000)).size - 16000) < 400
     assert decode(_wav(3.0, 16000), max_s=2.0).size == 32000
 
 
 def test_guard_voice_reply_is_transcribed_but_not_applied(env: Env) -> None:
+    pytest.importorskip("av")  # the "voice" extra
     guard = {**env.login("akram"), "Content-Type": "audio/wav"}
     assert env.client.post("/v1/voice/reply", content=_wav(), headers=guard).status_code == 503  # no model
     heard = _Heard("ہاں، دیکھ لیا")
