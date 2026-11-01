@@ -9,7 +9,7 @@ COPY apps/dashboard/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-FROM python:3.12-slim-trixie AS runtime
+FROM python:3.15-slim-trixie AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 # WeasyPrint (Pango/HarfBuzz) + Urdu Nastaliq/Naskh fonts for the bilingual evidence PDF
 RUN apt-get update && apt-get install -y --no-install-recommends \
