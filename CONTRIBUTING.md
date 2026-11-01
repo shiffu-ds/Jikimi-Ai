@@ -6,7 +6,7 @@ Shukriya! Ye project ek team ya akele developer dono ke liye bana hai (plan Sect
 ```bash
 make setup    # uv + npm dependencies, pre-commit hooks
 make env      # .env with random secrets
-make demo     # API + dashboard + simulated edge on http://localhost:8000
+make demo     # API + Streamlit console + simulated edge on http://localhost:8501
 ```
 
 ## Rules (plan Section 7.20)

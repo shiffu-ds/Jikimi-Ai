@@ -30,7 +30,7 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["packages/*", "edge", "server", "ml"]
+members = ["packages/*", "edge", "server", "ml", "apps/console"]
 
 [tool.uv.sources]
 jikimi-contracts = { workspace = true }
@@ -91,6 +91,7 @@ testpaths = [
     "server/tests",
     "ml/tests",
     "eval/tests",
+    "apps/console/tests",
 ]
 addopts = "-q --strict-markers --import-mode=importlib"
 pythonpath = ["."]

@@ -1,8 +1,8 @@
-"""One-command lite demo: API server + simulated edge in two child processes.
+"""One-command lite demo: API server, simulated edge and the Streamlit console as child processes.
 
-    uv run python scripts/dev.py demo        # server :8000 + edge (2 simulated cameras)
-    uv run python scripts/dev.py live        # server :8000 + edge with this laptop's webcam too
-    uv run python scripts/dev.py server      # only the API (+ dashboard if built)
+    uv run python scripts/dev.py demo        # server :8000 + console :8501 + edge (2 simulated cameras)
+    uv run python scripts/dev.py live        # the same with this laptop's webcam as a third camera
+    uv run python scripts/dev.py server      # only the API
 
 Ctrl-C stops both. The edge's outbox survives restarts, so stopping the server is a valid
 "internet cut" test: alerts queue up, go out by SMS (fake modem), and sync when it is back.
@@ -47,8 +47,27 @@ def main() -> int:
         print("server did not start", file=sys.stderr)
         server.terminate()
         return 1
-    print("\n  Jikimi AI  ->  http://localhost:8000   (API docs: /docs, guard app: /guard/)\n")
     if mode in ("demo", "live"):
+        console = ROOT / "apps" / "console"
+        procs.append(
+            subprocess.Popen(
+                [
+                    *py,
+                    "-m",
+                    "streamlit",
+                    "run",
+                    "src/jikimi_console/app.py",
+                    "--server.port",
+                    "8501",
+                    "--server.address",
+                    LAN_HOST,
+                ],
+                cwd=console,
+                env={**env, "JIKIMI_API_URL": "http://127.0.0.1:8000"},
+            )
+        )
+        print("\n  Jikimi AI console  ->  http://localhost:8501   (guard: 'Meri duty' after signing in as a guard)")
+        print("  API               ->  http://localhost:8000/docs\n")
         config = f"edge/config/site.{mode}.yaml"
         procs.append(subprocess.Popen([*py, "-m", "jikimi_edge", "--config", config, "run"], cwd=ROOT, env=env))
 

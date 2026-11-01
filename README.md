@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="apps/dashboard/public/favicon.svg" width="84" alt="Jikimi AI logo" />
+<img src="apps/console/src/jikimi_console/static/mark.png" width="84" alt="Jikimi AI logo" />
 
 # Jikimi AI · 지킴이
 
@@ -10,9 +10,8 @@ Edge-first AI for the CCTV cameras Pakistan already has: it warns **before** a m
 searches footage in **Roman Urdu**, keeps alerting through **load-shedding by SMS**, and builds
 **tamper-evident, FIR-ready evidence** — without face recognition.
 
-![Python](https://img.shields.io/badge/python-3.12-0f766e) ![Next.js](https://img.shields.io/badge/Next.js-16-0f766e) ![tests](https://img.shields.io/badge/tests-230%2B%20passing-0f766e) ![license](https://img.shields.io/badge/code-Apache--2.0-0f766e) ![data](https://img.shields.io/badge/data-CC%20BY--NC%204.0-0f766e)
+![Python](https://img.shields.io/badge/python-3.12-0f766e) ![Streamlit](https://img.shields.io/badge/Streamlit-1.66-0f766e) ![tests](https://img.shields.io/badge/tests-230%2B%20passing-0f766e) ![license](https://img.shields.io/badge/code-Apache--2.0-0f766e) ![data](https://img.shields.io/badge/data-CC%20BY--NC%204.0-0f766e)
 
-<img src="docs/images/overview.jpg" width="88%" alt="Jikimi dashboard in Urdu (RTL)" />
 
 </div>
 
@@ -32,11 +31,11 @@ searches footage in **Roman Urdu**, keeps alerting through **load-shedding by SM
 ## Try it in two commands
 
 ```bash
-make setup     # Python (uv) + web (npm) dependencies
-make demo      # .env + seed + API + Urdu dashboard + 2 simulated cameras -> http://localhost:8000
+make setup     # Python (uv) dependencies, Streamlit console included
+make demo      # .env + seed + API + Urdu console + 2 simulated cameras -> http://localhost:8501
 ```
 
-Log in as `sana` (supervisor), `akram` (guard, open `/guard/` on a phone), `admin` or `police` — the
+Log in as `sana` (supervisor), `akram` (guard: the console opens on his phone view, *Meri duty*), `admin` or `police` — the
 password is `JIKIMI_DEMO_PASSWORD` in your generated `.env`. Then watch the demo script play out:
 
 | Time | Camera | What happens | What you see |
@@ -60,10 +59,6 @@ On the **Rules** page (`/rules/`), type a rule in Roman Urdu, e.g. *"raat 11 ke 
 week; `sana` proposes, `admin` approves, and the edge picks it up signed within a minute. The same
 page shows today's **event mode** and the coming Ramadan / Chand Raat / Eid estimates to confirm.
 
-<p align="center">
-<img src="docs/images/alert.jpg" width="62%" alt="Alert detail with the 'why?' panel" />
-<img src="docs/images/guard.jpg" width="21%" alt="Guard PWA on a phone" />
-</p>
 
 ## What is in v0.1
 
@@ -77,13 +72,13 @@ page shows today's **event mode** and the coming Ramadan / Chand Raat / Eid esti
 | ✅ | **Roman Urdu search (F1)** — *"kal raat kaali bike 2 sawar gate pe"*: 365-variant lexicon, fuzzy spelling, Urdu script, deterministic time phrases; LLM fallback optional | `server/.../search` |
 | ✅ | **Evidence packs (F8)** — two-layer Ed25519 signatures, Urdu/English PDF with QR, RFC 6962 Merkle batches, OpenTimestamps, public verify portal with in-browser file hashing | `server/.../evidence` |
 | ✅ | **Escalation (F17), SOS (F22), camera tamper (F10), privacy (F19)** | |
-| ✅ | **Dashboard + guard PWA** — Urdu RTL first, dark mode, live WebSocket, offline queue | `apps/dashboard` |
+| ✅ | **Console (Streamlit)** — a guard-room register (*roznamcha*) rather than a wall of tiles: Urdu reasons, rubber-stamp statuses, a handover note between shifts, live refresh, the guard's phone view, a public evidence check | `apps/console` |
 | ✅ | **Rule builder (F11)** — *"raat 11 ke baad gate 2 par koi 5 min se zyada ruke to batao"* → rule; asks instead of guessing, 7-day backtest, admin approval, signed bundle pinned on the edge | `server/.../rules`, `/rules/` |
 | ✅ | **Event modes (F16)** — Ramadan, Chand Raat, Eid, Muharram, 14 August, bazaar days: Hijri estimates, admin confirms after moon sighting, each mode has its own calibration set | `server/.../services/calendar.py`, `/rules/` |
 | ✅ | **DVR onboarding (F20)** — Urdu setup wizard served by the edge (open it on a phone, PIN): ONVIF discovery or brand + IP, connection test with a blurred preview, draw the zone, detector test, save (password only in `.env`); RTSP templates for Hikvision / Dahua / CP Plus / Uniview / TP-Link | `make setup-wizard`, `discover`, `probe-stream` |
-| ✅ | **Voice replies (F12)** — the guard says *"haan dekh liya"* / *"ghalat alarm"* / *"madad chahiye"*; Whisper (int8, CPU) + an Urdu / Roman / Hindi intent parser; sent only after the guard's tap; audio never stored | guard PWA, `/v1/voice/reply` |
+| ✅ | **Voice replies (F12)** — the guard says *"haan dekh liya"* / *"ghalat alarm"* / *"madad chahiye"*; Whisper (int8, CPU) + an Urdu / Roman / Hindi intent parser; sent only after the guard's tap; audio never stored | console guard view, `/v1/voice/reply` |
 | ✅ | **Camera re-anchor (F10)** — a camera turned on purpose: admin "accept new view" (signed edge command) or automatic after 10 min | `/health/` |
-| ✅ | **Alerts read aloud (F12)** — Urdu voice when the phone has one, else its Hindi voice reads the alert written in Devanagari (spoken Urdu and Hindi are one language) | guard PWA |
+| ✅ | **Alerts read aloud (F12)** — Urdu voice when the phone has one, else its Hindi voice reads the alert written in Devanagari (spoken Urdu and Hindi are one language) | server (`explanation_hi`) |
 | ✅ | **Investigation agent (F1)** — "kal raat kaali bike 2 sawar … ye bike aur kahan gayi … report banao": read-only tools, every answer cites clips, 48/48 scripted tasks | Analyst → تفتیش |
 | ✅ | **Cross-camera routes (F2)** — a bike circling gate ↔ street is linked across cameras and scored as one route (calibrated per route) | `edge/.../cross_camera.py` |
 | ✅ | **Risk estimate + patrol (F15)**, **mohalla network (F21, opt-in, embeddings only, 2 h)**, **audio events (F13)**, **federated learning (F14)** | overview card, rules page, `ml/` |
@@ -99,7 +94,7 @@ flowchart LR
   edge --> outbox[("SQLite outbox")]
   outbox -->|"signed alerts + clips<br/>(WireGuard + mTLS)"| api["FastAPI server<br/>RBAC · search · evidence · escalation"]
   outbox -.->|"internet down"| sms["GSM SMS (Roman Urdu)"]
-  api --> ui["Urdu dashboard + guard PWA"]
+  api --> ui["Streamlit console: register, guard view, verify"]
   api --> verify["Public /verify portal"]
   api -.-> ots["OpenTimestamps (Bitcoin)"]
 ```
@@ -136,7 +131,7 @@ Every number, how it was measured and how to reproduce it: [`docs/results.md`](d
 packages/   contracts (Pydantic → TypeScript) · common · crypto · ml-runtime (OpenVINO/ONNX, torch-free)
 edge/       edge runtime, plugins, simulator, outbox/SMS          (python -m jikimi_edge)
 server/     FastAPI API, search, evidence, escalation, workers     (python -m jikimi_server)
-apps/       Next.js dashboard + guard PWA (static export served by the API)
+apps/       Streamlit console (supervisor, guard and police views) - talks to the API
 ml/         ST-GCN, trajectory transformer, PakSnatch-sim, training, statistics
 eval/       golden replay, chaos tests, load benchmark
 datasets/   datasheets, annotation guide, consent forms (Urdu/English), RUVR lexicon
@@ -147,11 +142,11 @@ docs/       plan v2.4, plan review (44 issues), ADRs, architecture, runbooks, Ur
 ## Development
 
 ```bash
-make test          # unit + API + contract tests, TypeScript check, dashboard tests
+make test          # unit + API + contract + console tests
 make replay        # golden scenarios (slow)
-make lint          # ruff, mypy --strict (shared packages), tsc
+make lint          # ruff, mypy --strict (shared packages)
 make evaluate-fa   # false alarms per camera-hour on held-out simulated traffic
-make web-dev       # dashboard with hot reload on :3000
+make ui            # only the console on :8501 (reloads on save)
 make help          # everything else
 ```
 

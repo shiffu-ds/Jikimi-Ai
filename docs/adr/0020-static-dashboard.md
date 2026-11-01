@@ -1,6 +1,6 @@
 # ADR-0020: Static dashboard export served by the API
 
-- **Status:** accepted (new in v2.4)
+- **Status:** superseded by ADR-0035 (Streamlit console) · accepted (new in v2.4)
 - **Date:** 2026-10-23
 - **Feature / gap:** -
 

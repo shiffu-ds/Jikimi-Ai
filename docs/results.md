@@ -377,9 +377,9 @@ type), so a phone's Hindi voice reads it as Urdu when there is no Urdu voice.
 
 | Suite | Result |
 |---|---|
-| Python fast suite (`pytest -m "not slow and not chaos"`) | 273 pass |
+| Python fast suite (`pytest -m "not slow and not chaos"`) | 312 pass |
 | Golden replay (`make replay`) | 18/18 |
 | Chaos (power cut, `kill -9`) | 3/3 |
 | Server tests on PostgreSQL 16 + pgvector | 81/81 |
-| Dashboard (vitest: SHA-256 fallback, Urdu/English parity) | 6/6 |
-| ruff, mypy --strict (shared packages), tsc, contract drift, production build | clean |
+| Console (Streamlit AppTest: sign-in renders, register rows, Roman Urdu times, no gender words) | 4/4 |
+| ruff, mypy --strict (shared packages) | clean |

@@ -1,7 +1,7 @@
-"""Dashboard-facing REST models (plan Section 11.2 / 11.4).
+"""Console-facing REST models (plan Section 11.2 / 11.4).
 
-These are exported to TypeScript (``apps/dashboard/src/lib/contracts.gen.ts``) by
-``scripts/gen_contract_types.py`` so the web app never hand-writes API types.
+Published through OpenAPI (``/docs``), so the Streamlit console and any other client read the
+same shapes.
 """
 
 from __future__ import annotations

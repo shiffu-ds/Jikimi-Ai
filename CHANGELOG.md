@@ -3,6 +3,12 @@
 ## 0.1.0 - 2026-10-24
 First runnable version of the Solo-track MVP (plan v2.4).
 
+- Front end rebuilt in Streamlit (ADR-0035, 2026-11-01): `apps/console` replaces the Next.js
+  dashboard and guard PWA. It reads like a duty register (roznamcha): ruled rows, Urdu rubber-stamp
+  statuses, the overview as a sentence, a handover note between shifts, alert details in a dialog
+  with the signed clip, role-based pages (guard view at phone width, public evidence check).
+  `make demo` / `make live` start it on :8501; `make ui` alone. TypeScript contract generation,
+  npm and the Node build stage are gone.
 - Personal safety (F23, ADR-0034, 2026-10-25): four behaviour-only plugins - `foot_snatch`
   (a phone snatched by someone on foot: approach from apart, touch, a run out of sight; phone held
   to the head raises it), `person_safety` (`person_in_danger` with `following`, `surrounded`,

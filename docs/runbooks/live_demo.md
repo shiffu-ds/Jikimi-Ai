@@ -2,16 +2,16 @@
 
 One simulated gate camera plus this laptop's own webcam, the full stack on one machine.
 
-1. **Build once:** `make web` (dashboard), models in `models/` (INT8 detector + pose: `uv run python
+1. **Once:** `make setup` (Python + the Streamlit console), models in `models/` (INT8 detector + pose: `uv run python
    scripts/quantize_openvino.py`; Whisper for voice replies: models/README.md).
 2. **Start:** `make live` - seeds the live site config (`edge/config/site.live.yaml`, adds the
-   camera `cam-webcam-01` with the zone "in front of the laptop") and starts the API, dashboard
-   and edge. Open http://localhost:8000 and log in (users and the demo password: `.env`).
+   camera `cam-webcam-01` with the zone "in front of the laptop") and starts the API, the console
+   and edge. Open http://localhost:8501 and log in (users and the demo password: `.env`).
 3. **Try, in this order:**
    - *Live cameras:* the webcam tile shows a blurred snapshot every few seconds; walk in and out.
-   - *Camera covered:* put a hand over the webcam for 10 s -> tamper ALERT_NOW on the dashboard
-     and in the guard app (`/guard/` in a second window, press "آواز آن کریں" once).
-   - *Your own rule:* Rules page -> "camera 3 par koi 1 minute se zyada ruke to batao" (camera 3
+   - *Camera covered:* put a hand over the webcam for 10 s -> tamper ALERT_NOW in the register
+     and on the guard's view (a second browser window, log in as `akram`: *Meri duty* rings).
+   - *Your own rule:* *Qawaid aur mausam* -> "camera 3 par koi 1 minute se zyada ruke to batao" (camera 3
      is the laptop) -> understand, propose, approve as admin. Sit in front of the laptop for a
      minute -> rule alert.
    - *Voice reply:* in the guard app press "بول کر جواب دیں", say "haan dekh liya", confirm the

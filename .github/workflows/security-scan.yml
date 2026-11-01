@@ -12,4 +12,3 @@ jobs:
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
       - uses: astral-sh/setup-uv@v6
       - run: uv export --frozen --all-packages --no-hashes > requirements.txt && uvx pip-audit -r requirements.txt
-      - run: cd apps/dashboard && npm audit --omit=dev --audit-level=high

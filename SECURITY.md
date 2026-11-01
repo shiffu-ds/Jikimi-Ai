@@ -4,7 +4,7 @@ Jikimi AI handles CCTV footage and evidence. Please report vulnerabilities priva
 
 - **How:** email the maintainers (see the repository profile) with "SECURITY" in the subject, or
   use GitHub private vulnerability reporting. Do not open a public issue.
-- **What to include:** affected component (edge / server / dashboard / evidence), version or
+- **What to include:** affected component (edge / server / console / evidence), version or
   commit, steps to reproduce, impact.
 - **Response:** acknowledgement within 3 working days; fix or mitigation plan within 14 days for
   high severity issues.
